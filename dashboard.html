@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <!-- Viewport ajustado para Mobile sem zoom -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nekotina - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,23 +11,18 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; -webkit-tap-highlight-color: transparent; }
         .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); backdrop-filter: blur(16px); }
-        
-        /* Mobile Sidebar */
-        .sidebar { transition: transform 0.3s ease; }
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; transform: translateX(-100%); z-index: 50; width: 85%; height: 100vh; background: #0a0a0a; border-right: 1px solid #222; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
-            .sidebar.active { transform: translateX(0); }
-            .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 40; backdrop-filter: blur(4px); display: none; }
-            .overlay.active { display: block; }
-        }
-
-        /* Toggle Switch */
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #222; transition: .3s; border-radius: 34px; border: 1px solid #333; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: #666; transition: .3s; border-radius: 50%; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 2px; background-color: #666; transition: .3s; border-radius: 50%; }
         input:checked + .slider { background-color: #7c3aed; border-color: #8b5cf6; }
-        input:checked + .slider:before { transform: translateX(20px); background-color: white; }
+        input:checked + .slider:before { transform: translateX(18px); background-color: white; }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; transform: translateX(-100%); z-index: 50; width: 85%; height: 100vh; background: #0a0a0a; border-right: 1px solid #222; transition: transform 0.3s ease; }
+            .sidebar.active { transform: translateX(0); }
+            .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 40; }
+            .overlay.active { display: block; }
+        }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
@@ -38,163 +32,107 @@
         if (!session) window.location.href = 'index.html';
         const user = JSON.parse(session);
         const API = 'https://meristic-unironical-gail.ngrok-free.dev';
+        let globalConfig = {}; // Guarda as configs complexas
     </script>
 
-    <!-- Overlay Mobile -->
     <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
 
     <!-- Mobile Header -->
     <header class="md:hidden flex items-center justify-between p-5 bg-[#0a0a0a] border-b border-white/5 sticky top-0 z-30">
         <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                <i data-lucide="zap" class="text-white w-5 h-5"></i>
-            </div>
-            <span class="font-extrabold tracking-tight text-lg">NEKOTINA</span>
+            <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center"><i data-lucide="zap" class="text-white w-5 h-5"></i></div>
+            <span class="font-extrabold text-lg">NEKOTINA</span>
         </div>
-        <button onclick="toggleMenu()" class="p-2 text-gray-300 hover:text-white bg-white/5 rounded-lg">
-            <i data-lucide="menu" class="w-6 h-6"></i>
-        </button>
+        <button onclick="toggleMenu()" class="p-2 text-gray-300"><i data-lucide="menu" class="w-6 h-6"></i></button>
     </header>
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-full md:w-72 sidebar md:bg-[#080808] md:border-r border-white/5 p-6 flex flex-col z-20">
+    <aside id="sidebar" class="sidebar w-full md:w-72 md:bg-[#080808] md:border-r border-white/5 p-6 flex flex-col z-20">
         <div class="hidden md:flex items-center gap-3 mb-10 px-2">
-            <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-600/20">
-                <i data-lucide="zap" class="text-white w-6 h-6"></i>
-            </div>
-            <span class="text-xl font-black tracking-tighter">NEKOTINA</span>
+            <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center"><i data-lucide="zap" class="text-white w-6 h-6"></i></div>
+            <span class="text-xl font-black">NEKOTINA</span>
         </div>
-
         <nav class="space-y-2 flex-1">
-            <button onclick="showSection('dashboard')" class="nav-item w-full flex items-center gap-4 px-4 py-3.5 rounded-xl bg-white/5 text-purple-400 font-bold transition-all">
-                <i data-lucide="layout-grid" class="w-5 h-5"></i> Dashboard
-            </button>
-            <button onclick="showSection('automsg')" class="nav-item w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all font-bold">
-                <i data-lucide="message-square" class="w-5 h-5"></i> Auto Mensagens
-            </button>
+            <button onclick="showSection('dashboard')" class="nav-item w-full flex items-center gap-4 px-4 py-3.5 rounded-xl bg-white/5 text-purple-400 font-bold transition-all"><i data-lucide="layout-grid"></i> Dashboard</button>
+            <button onclick="showSection('automsg')" class="nav-item w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all font-bold"><i data-lucide="message-square"></i> Mensagens</button>
+            <button onclick="configGeral()" class="nav-item w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all font-bold"><i data-lucide="user-cog"></i> Perfil</button>
         </nav>
-
-        <div class="mt-auto border-t border-white/5 pt-6 space-y-4">
-            <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
-                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Seu Plano</p>
-                <p id="timer" class="text-lg font-mono font-bold text-purple-400 mt-1">Carregando...</p>
-            </div>
-            <button onclick="logout()" class="flex items-center gap-4 px-4 py-3.5 w-full rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-bold">
-                <i data-lucide="log-out" class="w-5 h-5"></i> Sair da Conta
-            </button>
+        <div class="mt-auto pt-6 border-t border-white/5">
+            <button onclick="logout()" class="flex items-center gap-4 px-4 py-3.5 w-full rounded-xl text-red-400 hover:bg-red-500/10 font-bold"><i data-lucide="log-out"></i> Sair</button>
         </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-5 md:p-10 overflow-y-auto w-full">
+    <!-- Main -->
+    <main class="flex-1 p-5 md:p-10 overflow-y-auto w-full relative">
         
         <!-- DASHBOARD -->
         <div id="sec-dashboard">
-            <div class="mb-8">
-                <h2 class="text-3xl font-extrabold text-white leading-tight">Olá, <span class="text-purple-500" id="group-name">Grupo</span></h2>
-                <p class="text-gray-500 text-xs mt-1 font-mono bg-white/5 inline-block px-2 py-1 rounded-md" id="group-id">...</p>
+            <div class="mb-8 flex justify-between items-end">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-white">Olá, <span class="text-purple-500" id="group-name">Grupo</span></h2>
+                    <p class="text-gray-500 text-xs mt-1 bg-white/5 inline-block px-2 py-1 rounded-md font-mono" id="group-id">...</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-gray-500 font-bold uppercase">Expira em</p>
+                    <p id="timer" class="text-lg font-mono font-bold text-purple-500">...</p>
+                </div>
             </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="cards-container">
-                <!-- Cards serão injetados aqui -->
-            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="cards-container"></div>
         </div>
 
-        <!-- AUTO MENSAGENS -->
+        <!-- AUTO MSG -->
         <div id="sec-automsg" class="hidden">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div>
-                    <h2 class="text-3xl font-extrabold">Auto Mensagens</h2>
-                    <p class="text-gray-500 text-sm">Gerencie seus anúncios automáticos</p>
-                </div>
-                <button onclick="newAutoMsg()" class="w-full md:w-auto bg-purple-600 hover:bg-purple-500 px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-600/20 active:scale-95">
-                    <i data-lucide="plus-circle" class="w-5 h-5"></i> Nova Mensagem
-                </button>
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-extrabold">Auto Mensagens</h2>
+                <button onclick="newAutoMsg()" class="bg-purple-600 px-4 py-2 rounded-xl font-bold flex items-center gap-2"><i data-lucide="plus"></i> Nova</button>
             </div>
-
-            <div id="msg-list" class="space-y-4 pb-20">
-                <!-- Lista de mensagens -->
-            </div>
+            <div id="msg-list" class="space-y-4"></div>
         </div>
 
     </main>
 
     <script>
-        // Funções UI Mobile
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('overlay').classList.toggle('active');
-        }
-
-        function showSection(id) {
-            document.getElementById('sec-dashboard').classList.toggle('hidden', id !== 'dashboard');
-            document.getElementById('sec-automsg').classList.toggle('hidden', id !== 'automsg');
-            
-            // Atualiza estilo dos botões do menu
-            document.querySelectorAll('.nav-item').forEach(btn => {
-                btn.classList.remove('bg-white/5', 'text-purple-400');
-                btn.classList.add('text-gray-400');
-            });
-            event.currentTarget.classList.add('bg-white/5', 'text-purple-400');
-            event.currentTarget.classList.remove('text-gray-400');
-
-            if(window.innerWidth < 768) toggleMenu();
-        }
-
-        // Lógica Principal
         const cardsDef = [
-            { id: 'antilink', t: 'Anti-Link', d: 'Bloqueia links', i: 'link', c: 'amber' },
-            { id: 'antiporno', t: 'Anti-Pornô', d: 'Bloqueia +18', i: 'shield-alert', c: 'red' },
-            { id: 'antiflood', t: 'Anti-Flood', d: 'Evita Flood', i: 'zap', c: 'purple', cfg: true },
+            { id: 'antilink', t: 'Anti-Link', d: 'Bloqueia links', i: 'link', c: 'amber', cfg: true },
+            { id: 'antiporno', t: 'Anti-Pornô', d: 'Bloqueia +18', i: 'shield-alert', c: 'red', cfg: true },
+            { id: 'antiflood', t: 'Anti-Flood', d: 'Evita Spam', i: 'zap', c: 'purple', cfg: true },
             { id: 'welcome', t: 'Boas-Vindas', d: 'Saudação auto', i: 'door-open', c: 'green', cfg: true },
-            { id: 'antimedia', t: 'Anti-Mídia', d: 'Bloqueia fotos', i: 'image', c: 'blue', cfg: true },
+            { id: 'antimedia', t: 'Anti-Mídia', d: 'Filtra mídia', i: 'image', c: 'blue', cfg: true },
             { id: 'antifake', t: 'Anti-Fake', d: 'Bloqueia DDI', i: 'user-x', c: 'gray' },
+            { id: 'longtext', t: 'Anti-Texto', d: 'Limita caracteres', i: 'align-left', c: 'pink', cfg: true },
             { id: 'open_close', t: 'Auto Abrir', d: 'Horários gp', i: 'clock', c: 'cyan', cfg: true },
             { id: 'autohorarios', t: 'Auto Horários', d: 'Pagantes auto', i: 'calendar', c: 'orange' }
         ];
 
         async function init() {
-            document.getElementById('group-name').innerText = user.nome || 'Grupo';
-            document.getElementById('group-id').innerText = user.id;
-
             try {
-                const res = await fetch(API, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-                    body: JSON.stringify({ acao: 'get_config', id: user.id })
-                });
+                const res = await fetch(API, { method: 'POST', body: JSON.stringify({ acao: 'get_config', id: user.id }) });
                 const data = await res.json();
+                
+                globalConfig = data; // Guarda dados complexos
+                document.getElementById('group-name').innerText = data.nome || user.nome || 'Grupo';
+                document.getElementById('group-id').innerText = user.id;
                 
                 renderDashboard(data.status);
                 renderMessages(data.autoMsgs);
-                startTimer(user.expira);
-            } catch (e) {
-                console.error(e);
-            }
+                startTimer(data.expira || user.expira);
+            } catch(e) { console.error(e); }
             lucide.createIcons();
         }
 
         function renderDashboard(status) {
-            const container = document.getElementById('cards-container');
-            container.innerHTML = cardsDef.map(c => {
+            document.getElementById('cards-container').innerHTML = cardsDef.map(c => {
                 const active = status && status[c.id] === true;
                 return `
-                <div class="glass-card p-5 rounded-[24px] flex flex-col justify-between h-40 relative overflow-hidden group">
-                    <div class="flex justify-between items-start z-10">
-                        <div class="w-10 h-10 rounded-xl bg-${c.c}-500/10 flex items-center justify-center text-${c.c}-500">
-                            <i data-lucide="${c.i}" class="w-5 h-5"></i>
-                        </div>
-                        ${c.cfg ? `<button onclick="config('${c.id}')" class="text-gray-600 hover:text-white p-1"><i data-lucide="settings" class="w-4 h-4"></i></button>` : ''}
+                <div class="glass-card p-5 rounded-[24px] flex flex-col justify-between h-40 relative group">
+                    <div class="flex justify-between items-start">
+                        <div class="w-10 h-10 rounded-xl bg-${c.c}-500/10 flex items-center justify-center text-${c.c}-500"><i data-lucide="${c.i}"></i></div>
+                        ${c.cfg ? `<button onclick="openConfig('${c.id}')" class="text-gray-500 hover:text-white p-1"><i data-lucide="settings" class="w-4 h-4"></i></button>` : ''}
                     </div>
-                    <div class="z-10 mt-2">
-                        <h4 class="font-bold text-sm text-white">${c.t}</h4>
-                        <div class="flex items-center justify-between mt-3">
-                            <span class="text-[10px] font-bold ${active ? 'text-purple-400' : 'text-gray-600'}">${active ? 'LIGADO' : 'DESLIGADO'}</span>
-                            <label class="switch">
-                                <input type="checkbox" onchange="toggle('${c.id}', this)" ${active ? 'checked' : ''}>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+                    <div><h4 class="font-bold text-sm">${c.t}</h4><p class="text-[9px] text-gray-500 uppercase mt-0.5">${c.d}</p></div>
+                    <div class="flex items-center justify-between mt-2">
+                        <span class="text-[10px] font-bold ${active ? 'text-purple-400' : 'text-gray-700'}">${active ? 'ON' : 'OFF'}</span>
+                        <label class="switch"><input type="checkbox" onchange="toggle('${c.id}', this)" ${active ? 'checked' : ''}><span class="slider"></span></label>
                     </div>
                 </div>`;
             }).join('');
@@ -203,108 +141,196 @@
 
         function renderMessages(msgs) {
             const list = document.getElementById('msg-list');
-            if(!msgs || msgs.length === 0) {
-                list.innerHTML = `<div class="glass-card p-8 text-center rounded-3xl text-gray-500 text-sm">Nenhuma mensagem programada.</div>`;
-                return;
-            }
+            if(!msgs || !msgs.length) { list.innerHTML = `<div class="glass-card p-8 text-center text-gray-500 text-sm">Sem mensagens.</div>`; return; }
             list.innerHTML = msgs.map((m, i) => `
-                <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-start md:items-center">
-                    ${m.imagemPreview ? `<img src="${m.imagemPreview}" class="w-full md:w-20 h-32 md:h-20 object-cover rounded-xl bg-black/20">` : 
-                    `<div class="w-full md:w-20 h-16 md:h-20 bg-white/5 rounded-xl flex items-center justify-center text-gray-700"><i data-lucide="message-square-off"></i></div>`}
-                    
-                    <div class="flex-1 w-full">
-                        <p class="text-sm font-medium text-gray-200 line-clamp-2">${m.texto || 'Sem texto (apenas imagem)'}</p>
-                        <div class="flex flex-wrap gap-2 mt-2">
-                            <span class="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-1 rounded-md font-bold uppercase">${m.tempo} min</span>
-                            ${m.mencionarTodos ? '<span class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-1 rounded-md font-bold uppercase">@todos</span>' : ''}
-                            ${m.fixar ? '<span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-1 rounded-md font-bold uppercase">Fixado</span>' : ''}
-                        </div>
+                <div class="glass-card p-4 rounded-2xl flex gap-4 items-center">
+                    ${m.imagemPreview ? `<img src="${m.imagemPreview}" class="w-16 h-16 object-cover rounded-lg bg-black/30">` : `<div class="w-16 h-16 bg-white/5 rounded-lg flex items-center justify-center text-gray-600"><i data-lucide="file-text"></i></div>`}
+                    <div class="flex-1 overflow-hidden">
+                        <p class="text-sm font-bold truncate">${m.texto || 'Imagem'}</p>
+                        <p class="text-[10px] text-gray-500 mt-1">A cada ${m.tempo} min ${m.mencionarTodos ? '| @todos' : ''}</p>
                     </div>
-                    
-                    <button onclick="deleteMsg(${i})" class="w-full md:w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                    </button>
+                    <button onclick="delMsg(${i})" class="w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
             `).join('');
             lucide.createIcons();
         }
 
-        async function toggle(id, el) {
-            await fetch(API, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-                body: JSON.stringify({ acao: 'toggle', id: user.id, funcao: id, estado: el.checked ? 1 : 0 })
-            });
-        }
-
-        async function deleteMsg(idx) {
-            await fetch(API, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-                body: JSON.stringify({ acao: 'del_automsg', id: user.id, index: idx })
-            });
-            init();
-        }
-
-        async function newAutoMsg() {
-            const { value: form } = await Swal.fire({
-                title: 'Nova Mensagem',
-                background: '#111', color: '#fff', confirmButtonColor: '#7c3aed',
-                html: `
-                    <div class="space-y-3 text-left mt-2">
-                        <input id="sw-file" type="file" accept="image/*" class="text-sm w-full bg-white/5 p-2 rounded-lg text-gray-400">
-                        <textarea id="sw-txt" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white text-sm h-24 focus:border-purple-500 outline-none" placeholder="Digite sua mensagem..."></textarea>
-                        <div class="flex gap-2">
-                            <input id="sw-time" type="number" value="30" class="w-20 bg-black/30 border border-white/10 rounded-xl p-3 text-white text-sm text-center" placeholder="Min">
-                            <div class="flex-1 flex items-center gap-3 bg-black/30 border border-white/10 rounded-xl px-3">
-                                <input id="sw-all" type="checkbox" class="w-4 h-4 accent-purple-500"> <label for="sw-all" class="text-sm">Marcar Todos</label>
-                            </div>
+        // --- Lógica de Modais Específicos ---
+        async function openConfig(id) {
+            const configs = globalConfig.configs[user.id] || {};
+            
+            // 1. BOAS VINDAS
+            if(id === 'welcome') {
+                const cfg = configs.welcome || {};
+                const imgPreview = globalConfig.welcomeImg ? `<img src="${globalConfig.welcomeImg}" class="w-full h-32 object-cover rounded-xl mb-4">` : '';
+                const { value: form } = await Swal.fire({
+                    title: 'Configurar Boas-Vindas',
+                    background: '#111', color: '#fff', confirmButtonColor: '#7c3aed',
+                    html: `
+                        ${imgPreview}
+                        <input id="sw-img" type="file" accept="image/*" class="w-full mb-3 text-sm bg-white/5 rounded-lg p-2">
+                        <textarea id="sw-txt" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white h-24 mb-3" placeholder="Olá #user#...">${cfg.texto || ''}</textarea>
+                        <input id="sw-link" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white mb-3" placeholder="Link do botão" value="${cfg.link_url || ''}">
+                        <div class="flex gap-4 justify-center">
+                            <label><input type="checkbox" id="sw-btn1" ${cfg.btn_link ? 'checked' : ''}> Botão Link</label>
+                            <label><input type="checkbox" id="sw-btn2" ${cfg.btn_copy ? 'checked' : ''}> Botão Copiar</label>
                         </div>
-                        <div class="flex items-center gap-3 bg-black/30 border border-white/10 rounded-xl p-3">
-                            <input id="sw-pin" type="checkbox" class="w-4 h-4 accent-amber-500"> <label for="sw-pin" class="text-sm">Fixar Mensagem</label>
-                        </div>
-                    </div>
-                `,
-                preConfirm: () => {
-                    return new Promise(resolve => {
-                        const file = document.getElementById('sw-file').files[0];
-                        const data = {
-                            texto: document.getElementById('sw-txt').value,
-                            tempo: document.getElementById('sw-time').value,
-                            mencionarTodos: document.getElementById('sw-all').checked,
-                            fixar: document.getElementById('sw-pin').checked,
-                            imagem: null
-                        };
-                        if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (e) => { data.imagem = e.target.result; resolve(data); };
-                            reader.readAsDataURL(file);
-                        } else resolve(data);
-                    });
-                }
-            });
-
-            if (form) {
-                await fetch(API, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-                    body: JSON.stringify({ acao: 'add_automsg', id: user.id, msg: form })
+                    `,
+                    preConfirm: () => {
+                        return new Promise(resolve => {
+                            const file = document.getElementById('sw-img').files[0];
+                            const data = {
+                                texto: document.getElementById('sw-txt').value,
+                                link_url: document.getElementById('sw-link').value,
+                                show_button_link: document.getElementById('sw-btn1').checked,
+                                show_button_copy: document.getElementById('sw-btn2').checked,
+                                imagem: null
+                            };
+                            if(file) {
+                                const reader = new FileReader();
+                                reader.onload = (e) => { data.imagem = e.target.result; resolve(data); };
+                                reader.readAsDataURL(file);
+                            } else resolve(data);
+                        });
+                    }
                 });
+                if(form) post('save_welcome_full', form);
+            }
+
+            // 2. ANTIFLOOD
+            if(id === 'antiflood') {
+                const cfg = configs.antiflood || { limit: 5, action: 'ban' };
+                const { value: form } = await Swal.fire({
+                    title: 'Anti-Flood',
+                    background: '#111', color: '#fff',
+                    html: `
+                        <input id="fl-limit" type="number" value="${cfg.limit}" class="w-full bg-white/5 p-3 rounded-xl mb-3 text-white" placeholder="Limite (ex: 5)">
+                        <select id="fl-act" class="w-full bg-white/5 p-3 rounded-xl text-white">
+                            <option value="ban" ${cfg.action === 'ban' ? 'selected' : ''}>Banir</option>
+                            <option value="warn" ${cfg.action === 'warn' ? 'selected' : ''}>Apenas apagar</option>
+                        </select>
+                        <input type="hidden" id="fl-types" value='${JSON.stringify({text:true,image:true,video:true,sticker:true})}'>
+                    `,
+                    preConfirm: () => ({ limit: document.getElementById('fl-limit').value, action: document.getElementById('fl-act').value, types: JSON.parse(document.getElementById('fl-types').value) })
+                });
+                if(form) post('save_config_antiflood', form);
+            }
+
+            // 3. ANTIMEDIA
+            if(id === 'antimedia') {
+                await Swal.fire({
+                    title: 'Bloquear Mídia',
+                    background: '#111', color: '#fff',
+                    html: `
+                        <div class="space-y-3 text-left p-2">
+                            ${['image', 'video', 'audio', 'sticker', 'document'].map(t => `
+                                <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl">
+                                    <span class="capitalize">${t}</span>
+                                    <input type="checkbox" onchange="toggleAntimedia('${t}', this)" ${globalConfig.status?.[user.id]?.[`antimedia_${t}`] ? 'checked' : ''} class="w-5 h-5 accent-purple-500">
+                                </div>
+                            `).join('')}
+                        </div>
+                    `,
+                    showConfirmButton: false
+                });
+            }
+
+            // 4. OPEN/CLOSE
+            if(id === 'open_close') {
+                const cfg = configs.open_close || { abrir: '08:00', fechar: '22:00' };
+                const { value: form } = await Swal.fire({
+                    title: 'Horários',
+                    background: '#111', color: '#fff',
+                    html: `
+                        <label>Abrir</label> <input id="tm-open" type="time" value="${cfg.abrir}" class="bg-white/5 p-2 rounded mb-3 text-white"><br>
+                        <label>Fechar</label> <input id="tm-close" type="time" value="${cfg.fechar}" class="bg-white/5 p-2 rounded text-white">
+                    `,
+                    preConfirm: () => ({ abrir: document.getElementById('tm-open').value, fechar: document.getElementById('tm-close').value })
+                });
+                if(form) post('save_open_close', form);
+            }
+
+            // 5. BAN ACTION GERAL (Antilink, Antiporno)
+            if(['antilink', 'antiporno', 'longtext'].includes(id)) {
+                let act = 'ban';
+                if(configs.ban_actions) act = configs.ban_actions[id] || 'ban';
+                const { value: val } = await Swal.fire({
+                    title: `Ação para ${id}`,
+                    input: 'select',
+                    inputOptions: { 'ban': 'Banir', 'warn': 'Apagar' },
+                    inputValue: act,
+                    background: '#111', color: '#fff'
+                });
+                if(val) post('save_ban_action', { type: id, act: val });
+            }
+        }
+
+        async function configGeral() {
+            const { value: form } = await Swal.fire({
+                title: 'Perfil do Grupo',
+                background: '#111', color: '#fff',
+                html: `
+                    <input id="pf-nome" class="w-full bg-white/5 p-3 rounded-xl mb-3 text-white" placeholder="Nome do Grupo" value="${document.getElementById('group-name').innerText}">
+                    <input id="pf-senha" class="w-full bg-white/5 p-3 rounded-xl text-white" placeholder="Nova Senha">
+                `,
+                preConfirm: () => ({ nome: document.getElementById('pf-nome').value, senha: document.getElementById('pf-senha').value })
+            });
+            if(form) {
+                if(form.nome) await post('save_group_name', { nome: form.nome });
+                if(form.senha) await post('alterar_senha', { nova_senha: form.senha });
                 init();
             }
         }
 
-        // Timer simples
-        function startTimer(exp) {
-            setInterval(() => {
-                const d = exp - Date.now();
-                document.getElementById('timer').innerText = d > 0 
-                    ? `${Math.floor(d/86400000)}d ${Math.floor((d%86400000)/3600000)}h ${Math.floor((d%3600000)/60000)}m` 
-                    : "EXPIRADO";
-            }, 1000);
+        // --- Funções Principais ---
+        async function toggle(func, el) {
+            await post('toggle', { funcao: func, estado: el.checked ? 1 : 0 });
         }
 
-        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+        async function toggleAntimedia(tipo, el) {
+            await post('toggle_antimedia', { tipo, estado: el.checked ? 1 : 0 });
+        }
+
+        async function newAutoMsg() {
+            const { value: form } = await Swal.fire({
+                title: 'Nova AutoMsg',
+                background: '#111', color: '#fff',
+                html: `
+                    <input id="am-file" type="file" accept="image/*" class="w-full bg-white/5 p-2 rounded mb-3 text-sm">
+                    <textarea id="am-txt" class="w-full bg-white/5 p-3 rounded h-24 mb-3 text-white" placeholder="Mensagem..."></textarea>
+                    <input id="am-time" type="number" value="30" class="w-full bg-white/5 p-3 rounded mb-3 text-white">
+                    <label><input type="checkbox" id="am-all"> @todos</label> <label><input type="checkbox" id="am-pin"> Fixar</label>
+                `,
+                preConfirm: () => {
+                    return new Promise(resolve => {
+                        const file = document.getElementById('am-file').files[0];
+                        const d = { texto: document.getElementById('am-txt').value, tempo: document.getElementById('am-time').value, mencionarTodos: document.getElementById('am-all').checked, fixar: document.getElementById('am-pin').checked, imagem: null };
+                        if(file) {
+                            const r = new FileReader();
+                            r.onload = e => { d.imagem = e.target.result; resolve(d); };
+                            r.readAsDataURL(file);
+                        } else resolve(d);
+                    });
+                }
+            });
+            if(form) { await post('add_automsg', { msg: form }); init(); }
+        }
+
+        async function delMsg(idx) { await post('del_automsg', { index: idx }); init(); }
+
+        async function post(acao, data) {
+            try {
+                await fetch(API, { method: 'POST', body: JSON.stringify({ acao, id: user.id, ...data }) });
+                const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1500, background: '#111', color: '#fff' });
+                Toast.fire({ icon: 'success', title: 'Salvo!' });
+            } catch(e) { Swal.fire('Erro', 'Falha ao salvar', 'error'); }
+        }
+
+        function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
+        function showSection(id) { document.getElementById('sec-dashboard').classList.toggle('hidden', id!=='dashboard'); document.getElementById('sec-automsg').classList.toggle('hidden', id!=='automsg'); if(window.innerWidth<768) toggleMenu(); }
+        function startTimer(exp) { setInterval(() => { const d=exp-Date.now(); document.getElementById('timer').innerText = d>0 ? `${Math.floor(d/86400000)}d ${Math.floor((d%86400000)/3600000)}h` : "EXPIRADO"; }, 1000); }
+        function logout() { localStorage.clear(); window.location.href='index.html'; }
+
         window.onload = init;
     </script>
 </body>
