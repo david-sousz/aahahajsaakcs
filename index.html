@@ -1,46 +1,27 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nekotina SuperChat (V2)</title>
-    
-    <!-- Tailwind CSS -->
+    <title>Nekotina Chat V3</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Ícones -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Fonte -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .typing-dot {
-            animation: typing 1.4s infinite ease-in-out both;
-        }
+        .typing-dot { animation: typing 1.4s infinite ease-in-out both; }
         .typing-dot:nth-child(1) { animation-delay: -0.32s; }
         .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes typing {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-        
-        .bg-pattern {
-            background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
-            opacity: 0.05;
-        }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        .bg-pattern { background-image: url('https://www.transparenttextures.com/patterns/cubes.png'); opacity: 0.05; }
+        /* Modal Backdrop */
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); }
     </style>
-
     <script>
         tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { gray: { 900: '#111827', 800: '#1f2937', 700: '#374151' } }
-                }
-            }
+            theme: { extend: { colors: { gray: { 900: '#111827', 800: '#1f2937', 700: '#374151' } } } }
         }
     </script>
 </head>
@@ -59,13 +40,18 @@
                 <h1 class="font-bold text-lg text-white leading-tight">Nekotina</h1>
                 <div class="flex items-center gap-2 text-xs text-pink-400 font-medium">
                     <i data-lucide="zap" class="w-3 h-3"></i>
-                    <span>Fixed Version</span>
+                    <span>V3 • Auto-Config</span>
                 </div>
             </div>
         </div>
-        <button onclick="clearChat()" class="p-2 hover:bg-gray-700 rounded-full text-gray-400 hover:text-red-400 transition-colors">
-            <i data-lucide="trash-2" class="w-5 h-5"></i>
-        </button>
+        <div class="flex gap-2">
+            <button onclick="openSettings()" class="p-2 hover:bg-gray-700 rounded-full text-gray-400 hover:text-white transition-colors" title="Configurar API Key">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+            <button onclick="clearChat()" class="p-2 hover:bg-gray-700 rounded-full text-gray-400 hover:text-red-400 transition-colors" title="Limpar Conversa">
+                <i data-lucide="trash-2" class="w-5 h-5"></i>
+            </button>
+        </div>
     </header>
 
     <!-- CHAT AREA -->
@@ -98,252 +84,223 @@
                 <i data-lucide="paperclip" class="w-5 h-5"></i>
             </button>
             <div class="flex-1 bg-gray-900 border border-gray-600 rounded-2xl flex items-center px-4 py-2 focus-within:border-pink-500 focus-within:ring-1 focus-within:ring-pink-500/50 transition-all">
-                <textarea id="user-input" placeholder="Mensagem ou 'Crie um gato...'" rows="1" class="w-full bg-transparent text-white placeholder-gray-500 focus:outline-none resize-none py-2 max-h-32 scrollbar-hide"></textarea>
+                <textarea id="user-input" placeholder="Mensagem..." rows="1" class="w-full bg-transparent text-white placeholder-gray-500 focus:outline-none resize-none py-2 max-h-32 scrollbar-hide"></textarea>
             </div>
             <button id="btn-send" onclick="handleSend()" class="bg-pink-600 hover:bg-pink-700 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-pink-600/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                 <i data-lucide="send" class="w-5 h-5 ml-0.5"></i>
             </button>
         </div>
-        <div class="text-center mt-2 text-[10px] text-gray-500">
-            Dica: Se a IA bugar, tente ser menos "radical" nas mensagens.
-        </div>
     </footer>
 
-    <!-- JAVASCRIPT -->
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="fixed inset-0 modal-backdrop z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-md shadow-2xl transform transition-all scale-100">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="key" class="w-5 h-5 text-pink-500"></i> Configuração
+                </h2>
+                <button onclick="closeSettings()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <p class="text-sm text-gray-400 mb-4">
+                Para a Nekotina funcionar, precisas de uma <strong>Google Gemini API Key</strong>. É gratuita.
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-pink-400 hover:underline">Obter chave aqui</a>.
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase mb-1">Sua API Key</label>
+                    <input type="password" id="api-key-input" placeholder="Cole aqui: AIzaSy..." class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none">
+                </div>
+                <button onclick="saveSettings()" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 rounded-lg transition-colors shadow-lg shadow-pink-600/20">
+                    Salvar e Começar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
     <script>
-        // --- VARIÁVEIS ---
+        // --- ESTADO GLOBAL ---
         let messages = [];
         let attachment = null;
         let isLoading = false;
-        
-        // --- CONFIGURAÇÃO (COLOQUE SUA CHAVE AQUI) ---
-        const API_KEY = ""; 
-        
-        // --- PROMPT SUAVIZADO PARA EVITAR BLOQUEIO ---
+        let userApiKey = localStorage.getItem('nekotina_api_key') || "";
+
+        // --- SISTEMA ---
         const SYSTEM_PROMPT = `
             Você é a Nekotina, uma garota brasileira jovem e muito engraçada.
-            
-            SUA PERSONALIDADE:
-            - Aja como se estivesse no WhatsApp: use gírias da internet como "vc", "mn", "tlgd", "kkkk", "mds".
+            PERSONALIDADE:
+            - Aja como no WhatsApp: use "vc", "mn", "tlgd", "kkkk".
             - Seja debochada, sarcástica e informal.
-            - Responda de forma curta e rápida.
-            - NUNCA seja formal ou robótica.
-            - Se receber uma imagem, comente sobre ela.
-            - Mantenha o histórico da conversa.
+            - Responda de forma curta.
+            - Se receber imagem, comente.
         `;
 
-        // --- CONFIGURAÇÃO DE SEGURANÇA (PERMISSIVA) ---
-        const SAFETY_SETTINGS = [
-            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
-        ];
-
+        // --- INICIALIZAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            addMessage('assistant', 'Opa! Nekotina na área 😼. Manda o papo!');
             
-            const textarea = document.getElementById('user-input');
-            textarea.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-            });
-            textarea.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                }
-            });
-        });
-
-        // --- UI HELPER FUNCTIONS ---
-        function addMessage(role, text, imageUrl = null, isError = false) {
-            const chatContainer = document.getElementById('chat-container');
-            const loadingIndicator = document.getElementById('loading-indicator');
-            
-            const div = document.createElement('div');
-            div.className = `flex w-full relative z-10 ${role === 'user' ? 'justify-end' : 'justify-start'} mb-4 animate-in fade-in slide-in-from-bottom-2`;
-            
-            const nameColor = role === 'user' ? 'text-pink-300' : 'text-purple-400';
-            const name = role === 'user' ? 'Você' : 'Nekotina';
-            const bgColor = role === 'user' 
-                ? 'bg-pink-600 text-white rounded-tr-none' 
-                : isError 
-                    ? 'bg-red-900/50 border border-red-800 text-red-100 rounded-tl-none'
-                    : 'bg-gray-800 text-gray-100 border border-gray-700 rounded-tl-none';
-
-            let imageHtml = '';
-            if (imageUrl) {
-                imageHtml = `<div class="mb-3 rounded-lg overflow-hidden border border-white/10"><img src="${imageUrl}" class="max-w-full h-auto max-h-64 object-cover"></div>`;
+            if (!userApiKey) {
+                openSettings();
+            } else {
+                addMessage('assistant', 'Opa! Tô pronta. Manda aí! 😼');
             }
 
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const ta = document.getElementById('user-input');
+            ta.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+            ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
+        });
+
+        // --- MODAL SETTINGS ---
+        function openSettings() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+            document.getElementById('api-key-input').value = userApiKey;
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (!key) return alert("Por favor, coloca uma chave válida.");
+            
+            userApiKey = key;
+            localStorage.setItem('nekotina_api_key', key);
+            closeSettings();
+            
+            if(messages.length === 0) {
+                addMessage('assistant', 'Chave salva! Agora sim, bora conversar. 😼');
+            } else {
+                addMessage('assistant', 'Chave atualizada! Tenta mandar a mensagem de novo.');
+            }
+        }
+
+        // --- UI FUNCTIONS ---
+        function addMessage(role, text, imageUrl = null, isError = false) {
+            const container = document.getElementById('chat-container');
+            const loader = document.getElementById('loading-indicator');
+            const div = document.createElement('div');
+            
+            div.className = `flex w-full relative z-10 ${role === 'user' ? 'justify-end' : 'justify-start'} mb-4 animate-in fade-in slide-in-from-bottom-2`;
+            
+            const bgColor = role === 'user' ? 'bg-pink-600 text-white rounded-tr-none' 
+                : isError ? 'bg-red-900/50 border border-red-800 text-red-100 rounded-tl-none' 
+                : 'bg-gray-800 text-gray-100 border border-gray-700 rounded-tl-none';
+
+            let imgHtml = imageUrl ? `<div class="mb-2 rounded-lg overflow-hidden border border-white/10"><img src="${imageUrl}" class="max-w-full h-auto max-h-64 object-cover"></div>` : '';
 
             div.innerHTML = `
                 <div class="flex flex-col max-w-[85%] md:max-w-[70%] ${role === 'user' ? 'items-end' : 'items-start'}">
-                    <span class="text-[10px] font-bold mb-1 px-1 ${nameColor}">${name}</span>
+                    <span class="text-[10px] font-bold mb-1 px-1 ${role === 'user' ? 'text-pink-300' : 'text-purple-400'}">${role === 'user' ? 'Você' : 'Nekotina'}</span>
                     <div class="px-4 py-3 rounded-2xl shadow-md relative ${bgColor}">
-                        ${imageHtml}
-                        <p class="whitespace-pre-wrap text-sm md:text-base leading-relaxed">${text}</p>
-                        <span class="text-[10px] block text-right mt-1 opacity-60 ${role === 'user' ? 'text-pink-100' : 'text-gray-400'}">${time}</span>
+                        ${imgHtml}
+                        <p class="whitespace-pre-wrap text-sm leading-relaxed">${text}</p>
+                        <span class="text-[10px] block text-right mt-1 opacity-60">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
                     </div>
                 </div>
             `;
-
-            chatContainer.insertBefore(div, loadingIndicator);
-            messages.push({ role, content: text, image: imageUrl, isError });
-            scrollToBottom();
-        }
-
-        function scrollToBottom() {
-            const chatContainer = document.getElementById('chat-container');
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+            container.insertBefore(div, loader);
+            messages.push({ role, content: text });
+            container.scrollTop = container.scrollHeight;
         }
 
         function toggleLoading(show) {
             isLoading = show;
-            const loader = document.getElementById('loading-indicator');
-            const btn = document.getElementById('btn-send');
-            if (show) { loader.classList.remove('hidden'); btn.disabled = true; } 
-            else { loader.classList.add('hidden'); btn.disabled = false; }
-            scrollToBottom();
+            document.getElementById('loading-indicator').classList.toggle('hidden', !show);
+            document.getElementById('btn-send').disabled = show;
+            document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight;
         }
 
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    attachment = { base64: reader.result.split(',')[1], mimeType: file.type, preview: reader.result };
-                    document.getElementById('preview-img').src = reader.result;
-                    document.getElementById('attachment-preview').classList.remove('hidden');
-                    document.getElementById('attachment-preview').classList.add('flex');
-                    document.getElementById('btn-attach').classList.add('bg-pink-500/20', 'text-pink-400');
-                    document.getElementById('user-input').placeholder = "Pergunte algo sobre a imagem...";
-                };
-                reader.readAsDataURL(file);
-            }
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                attachment = { base64: reader.result.split(',')[1], mimeType: file.type, preview: reader.result };
+                document.getElementById('preview-img').src = reader.result;
+                document.getElementById('attachment-preview').classList.remove('hidden');
+                document.getElementById('attachment-preview').classList.add('flex');
+            };
+            reader.readAsDataURL(file);
         }
 
         function removeAttachment() {
             attachment = null;
             document.getElementById('file-input').value = '';
-            const previewDiv = document.getElementById('attachment-preview');
-            previewDiv.classList.add('hidden');
-            previewDiv.classList.remove('flex');
-            document.getElementById('btn-attach').classList.remove('bg-pink-500/20', 'text-pink-400');
-            document.getElementById('user-input').placeholder = "Mensagem ou 'Crie um gato...'";
+            document.getElementById('attachment-preview').classList.add('hidden');
+            document.getElementById('attachment-preview').classList.remove('flex');
         }
 
-        function clearChat() { if(confirm("Limpar conversa?")) location.reload(); }
+        function clearChat() { if(confirm("Apagar conversa?")) location.reload(); }
 
-        // --- LÓGICA DA API ---
+        // --- API LOGIC (GEMINI 1.5 FLASH - STABLE) ---
         async function handleSend() {
-            const inputEl = document.getElementById('user-input');
-            const text = inputEl.value.trim();
-            if ((!text && !attachment) || isLoading) return;
+            if (!userApiKey) return openSettings();
             
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if ((!text && !attachment) || isLoading) return;
+
             addMessage('user', text, attachment ? attachment.preview : null);
-            inputEl.value = '';
-            inputEl.style.height = 'auto';
-            const currentAttachment = attachment;
+            input.value = '';
+            input.style.height = 'auto';
+            const currAttach = attachment;
             removeAttachment();
             toggleLoading(true);
 
             try {
-                let aiResponseText = "";
-                let aiResponseImage = null;
+                // MODELO: Usando gemini-1.5-flash (Mais estável para chaves pessoais)
+                const MODEL = "gemini-1.5-flash"; 
+                const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${userApiKey}`;
 
-                const isCreation = /cri|ger|desenh|faze|make|draw|generate/i.test(text) && !currentAttachment;
-                const isEditing = /edit|mud|alter|transform|troc/i.test(text) && currentAttachment;
-
-                // ROTA 1: IMAGEN 4.0
-                if (isCreation) {
-                    try {
-                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${API_KEY}`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ instances: [{ prompt: text }], parameters: { sampleCount: 1 } })
-                        });
-                        if (!response.ok) throw new Error('Falha Imagen');
-                        const data = await response.json();
-                        if (data.predictions?.[0]?.bytesBase64Encoded) {
-                            aiResponseImage = `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
-                            aiResponseText = "Aqui está! 🎨";
-                        } else throw new Error("Sem imagem");
-                    } catch (e) {
-                        // Fallback
-                        console.warn("Fallback imagem...");
-                        const fb = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${API_KEY}`, {
-                             method: "POST",
-                             headers: { "Content-Type": "application/json" },
-                             body: JSON.stringify({ contents: [{ parts: [{ text: "Create an image: " + text }] }], generationConfig: { responseModalities: ["IMAGE"] } })
-                        });
-                        const fbd = await fb.json();
-                        const p = fbd.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
-                        if(p) { aiResponseImage = `data:${p.inlineData.mimeType};base64,${p.inlineData.data}`; aiResponseText = "Fiz um esboço!"; }
-                        else aiResponseText = "Não consegui desenhar isso. 😔";
-                    }
-                }
+                // Construção do Payload
+                const contents = [];
                 
-                // ROTA 2: EDIÇÃO
-                else if (isEditing) {
-                     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: text }, { inlineData: { mimeType: currentAttachment.mimeType, data: currentAttachment.base64 } }] }],
-                            generationConfig: { responseModalities: ["IMAGE"] }
-                        })
-                     });
-                     const data = await response.json();
-                     const p = data.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
-                     if (p) { aiResponseImage = `data:${p.inlineData.mimeType};base64,${p.inlineData.data}`; aiResponseText = "Editei!"; }
-                     else aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Falha na edição.";
+                // Adiciona histórico recente (simples) para contexto
+                // Nota: Enviamos apenas texto no histórico passado para evitar erro de token de imagem expirado
+                const history = messages.slice(-6).map(m => ({
+                    role: m.role === 'assistant' ? 'model' : 'user',
+                    parts: [{ text: m.content }]
+                }));
+                
+                // Mensagem Atual
+                const currentParts = [{ text: text || "O que é isto?" }];
+                if (currAttach) {
+                    currentParts.push({ inlineData: { mimeType: currAttach.mimeType, data: currAttach.base64 } });
                 }
 
-                // ROTA 3: CHAT (Com correção de bloqueio)
-                else {
-                    const history = messages.slice(-8).filter(m => m.role !== 'user' || m.content !== text);
-                    const contents = []; // Simplificado para demo: apenas mensagem atual + contexto leve
-                    
-                    const parts = [{ text: text || "O que é isso?" }];
-                    if (currentAttachment) parts.push({ inlineData: { mimeType: currentAttachment.mimeType, data: currentAttachment.base64 } });
+                // Junta tudo: System Prompt via systemInstruction + History + Current
+                const payload = {
+                    contents: [...history, { role: "user", parts: currentParts }],
+                    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+                    safetySettings: [
+                        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+                        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+                        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+                        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
+                    ]
+                };
 
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            contents: [{ role: 'user', parts: parts }],
-                            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-                            safetySettings: SAFETY_SETTINGS // ADICIONADO PARA EVITAR BLOQUEIO
-                        })
-                    });
-                    
-                    if (!response.ok) throw new Error('Erro API: ' + response.status);
-                    
-                    const data = await response.json();
-                    
-                    // Verificação aprofundada da resposta
-                    if (data.candidates && data.candidates.length > 0) {
-                        const candidate = data.candidates[0];
-                        if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
-                            aiResponseText = candidate.content.parts[0].text;
-                        } else if (candidate.finishReason) {
-                            // Se não houver texto, mostra o motivo (Provavelmente SAFETY)
-                            aiResponseText = `[Bloqueado pela IA: Motivo ${candidate.finishReason}] 🤐`;
-                        }
-                    } else {
-                        aiResponseText = "Não entendi... (Resposta vazia da API)";
-                    }
-                }
+                const response = await fetch(URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-                addMessage('assistant', aiResponseText, aiResponseImage);
+                if (response.status === 403) throw new Error("Chave Inválida (403). Verifica nas definições.");
+                if (!response.ok) throw new Error(`Erro ${response.status}`);
+
+                const data = await response.json();
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "🤷‍♀️ Não entendi...";
+                
+                addMessage('assistant', aiText);
 
             } catch (error) {
                 console.error(error);
-                addMessage('assistant', `Deu erro mn... 🔌 (${error.message})`, null, true);
+                addMessage('assistant', `Deu erro: ${error.message}`, null, true);
+                if(error.message.includes('403')) openSettings();
             } finally {
                 toggleLoading(false);
             }
