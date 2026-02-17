@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nekotina Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050000; color: white; }
+        .glass { background: rgba(25, 0, 0, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 50, 50, 0.1); }
+        .input-box:focus-within { border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,0,0,0.15),transparent)] z-[-1]"></div>
+
+    <main class="glass w-full max-w-[400px] rounded-[32px] p-10 shadow-2xl animate-in fade-in zoom-in duration-500">
+        <div class="text-center mb-10">
+            <div class="w-16 h-16 bg-red-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-red-600/20">
+                <i data-lucide="shield-alert" class="text-white w-8 h-8"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight">Painel Admin</h1>
+            <p class="text-gray-400 text-sm mt-1">Nekotina System</p>
+        </div>
+
+        <div class="space-y-4">
+            <div class="input-box flex items-center bg-white/5 border border-white/10 rounded-xl px-4 py-3 transition-all">
+                <i data-lucide="user" class="w-4 h-4 text-gray-500 mr-3"></i>
+                <input type="text" id="admin-user" class="bg-transparent border-none outline-none text-sm w-full placeholder:text-gray-700" placeholder="Usuário">
+            </div>
+            <div class="input-box flex items-center bg-white/5 border border-white/10 rounded-xl px-4 py-3 transition-all">
+                <i data-lucide="key" class="w-4 h-4 text-gray-500 mr-3"></i>
+                <input type="password" id="admin-pass" class="bg-transparent border-none outline-none text-sm w-full placeholder:text-gray-700" placeholder="Senha">
+            </div>
+            <button onclick="login()" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95">
+                Entrar
+            </button>
+        </div>
+        <p id="msg" class="text-center text-xs mt-6 h-4 text-red-500 font-bold"></p>
+    </main>
+
+    <script>
+        const API = 'https://meristic-unironical-gail.ngrok-free.dev';
+        async function login() {
+            const user = document.getElementById('admin-user').value;
+            const pass = document.getElementById('admin-pass').value;
+            const msg = document.getElementById('msg');
+            
+            if(!user || !pass) return msg.innerText = "Preencha tudo.";
+            
+            try {
+                const res = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body:JSON.stringify({acao:'admin_login', user, pass}) });
+                const data = await res.json();
+                
+                if(data.sucesso) {
+                    localStorage.setItem('nekotina_admin_session', 'ok');
+                    window.location.href = 'painel-admin.html';
+                } else {
+                    msg.innerText = data.erro || "Falha no login.";
+                }
+            } catch(e) { msg.innerText = "Erro de conexão."; }
+        }
+        lucide.createIcons();
+    </script>
+</body>
+</html>
