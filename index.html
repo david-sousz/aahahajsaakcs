@@ -3,119 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso Restrito</title>
+    <title>Acesso RDP</title>
     <style>
+        :root { --primary: #0070f3; --bg: #f0f2f5; --text: #333; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
         }
-        .login-container {
+        .card {
             background: white;
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 300px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 350px;
             text-align: center;
         }
-        h2 { margin-bottom: 1.5rem; color: #333; }
+        h2 { margin-bottom: 1.5rem; color: var(--text); }
         input {
             width: 100%;
-            padding: 10px;
-            margin: 10px 0;
+            padding: 12px;
+            margin: 8px 0;
             border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box; /* Para o padding não estourar a largura */
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
         }
         button {
             width: 100%;
-            padding: 10px;
-            background-color: #0070f3; /* Cor do Vercel */
+            padding: 12px;
+            background-color: var(--primary);
             color: white;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            border-radius: 6px;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
         }
         button:hover { background-color: #0051a2; }
-        #mensagem {
+        .toggle-link {
+            display: block;
             margin-top: 15px;
+            color: var(--primary);
+            cursor: pointer;
             font-size: 14px;
-            min-height: 20px;
+            text-decoration: underline;
         }
-        .erro { color: red; }
-        .sucesso { color: green; }
+        .hidden { display: none; }
+        #msg { margin-top: 15px; font-size: 14px; min-height: 20px; }
+        .erro { color: #e00; }
+        .sucesso { color: #008000; }
     </style>
 </head>
 <body>
 
-<div class="login-container">
-    <h2>Login RDP</h2>
-    <form id="loginForm">
+<div class="card">
+    <h2 id="titulo">Login</h2>
+    
+    <form id="authForm">
         <input type="text" id="user" placeholder="Usuário" required>
         <input type="password" id="pass" placeholder="Senha" required>
-        <button type="submit" id="btnEntrar">Entrar</button>
+        <button type="submit" id="btnAction">Entrar</button>
     </form>
-    <div id="mensagem"></div>
+
+    <div id="msg"></div>
+
+    <span class="toggle-link" id="toggleBtn">Não tem conta? Cadastre-se</span>
 </div>
 
 <script>
-    // SEU LINK DO NGROK AQUI (Já atualizei com o que você mandou)
-    const API_URL = "https://meristic-unironical-gail.ngrok-free.dev/login.json";
+    // SEU LINK FIXO DO NGROK
+    const API_URL = "https://meristic-unironical-gail.ngrok-free.dev";
+    
+    let isLoginMode = true;
 
-    const form = document.getElementById('loginForm');
-    const msgDiv = document.getElementById('mensagem');
-    const btn = document.getElementById('btnEntrar');
+    const form = document.getElementById('authForm');
+    const titulo = document.getElementById('titulo');
+    const btn = document.getElementById('btnAction');
+    const toggle = document.getElementById('toggleBtn');
+    const msg = document.getElementById('msg');
+
+    // Alternar entre Login e Cadastro
+    toggle.addEventListener('click', () => {
+        isLoginMode = !isLoginMode;
+        titulo.innerText = isLoginMode ? "Login" : "Criar Conta";
+        btn.innerText = isLoginMode ? "Entrar" : "Cadastrar";
+        toggle.innerText = isLoginMode ? "Não tem conta? Cadastre-se" : "Já tenho conta. Entrar";
+        msg.innerText = "";
+    });
 
     form.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Não recarrega a página
-        
-        // Pega os dados dos inputs
-        const usuarioInput = document.getElementById('user').value;
-        const senhaInput = document.getElementById('pass').value;
+        e.preventDefault();
+        const user = document.getElementById('user').value;
+        const pass = document.getElementById('pass').value;
 
-        msgDiv.textContent = "Verificando na base de dados...";
-        msgDiv.className = "";
+        msg.className = "";
+        msg.innerText = "Processando...";
         btn.disabled = true;
 
         try {
-            // Faz a requisição para a sua RDP
-            const response = await fetch(API_URL, {
-                method: 'GET',
-                headers: {
-                    // Esse header é OBRIGATÓRIO para o Ngrok Grátis não bloquear o acesso
-                    "ngrok-skip-browser-warning": "true",
-                    "Content-Type": "application/json"
+            if (isLoginMode) {
+                // --- LÓGICA DE LOGIN (GET) ---
+                const res = await fetch(API_URL, {
+                    headers: { "ngrok-skip-browser-warning": "true" }
+                });
+                const users = await res.json();
+                const valido = users.find(u => u.login === user && u.senha === pass);
+
+                if (valido) {
+                    msg.className = "sucesso";
+                    msg.innerHTML = "✅ Login efetuado! Redirecionando...";
+                    // window.location.href = '/dashboard.html'; // Descomente para redirecionar
+                } else {
+                    throw new Error("Usuário ou senha incorretos.");
                 }
-            });
 
-            if (!response.ok) {
-                throw new Error("Erro ao conectar na RDP");
-            }
-
-            const usuarios = await response.json();
-
-            // Procura se existe alguém com esse login E senha
-            const usuarioValido = usuarios.find(u => u.login === usuarioInput && u.senha === senhaInput);
-
-            if (usuarioValido) {
-                msgDiv.textContent = "✅ Login realizado com sucesso!";
-                msgDiv.className = "sucesso";
-                // Aqui você redirecionaria o usuário, ex: window.location.href = '/dashboard';
             } else {
-                msgDiv.textContent = "❌ Usuário ou senha incorretos.";
-                msgDiv.className = "erro";
+                // --- LÓGICA DE CADASTRO (POST) ---
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ login: user, senha: pass })
+                });
+
+                if (!res.ok) {
+                    const erro = await res.json();
+                    throw new Error(erro.erro || "Erro ao cadastrar.");
+                }
+
+                msg.className = "sucesso";
+                msg.innerText = "✅ Conta criada! Faça login agora.";
+                // Volta para tela de login automaticamente
+                setTimeout(() => toggle.click(), 1500);
             }
 
-        } catch (error) {
-            console.error(error);
-            msgDiv.textContent = "⚠️ Erro: A RDP parece estar offline ou o Ngrok caiu.";
-            msgDiv.className = "erro";
+        } catch (err) {
+            msg.className = "erro";
+            msg.innerText = "❌ " + (err.message || "Erro de conexão.");
+            console.error(err);
         } finally {
             btn.disabled = false;
         }
