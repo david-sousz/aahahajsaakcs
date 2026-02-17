@@ -3,270 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nekotina - Elite Dashboard</title>
+    <title>Nekotina - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: #fff; }
-        .glass { background: rgba(15, 7, 25, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .card-feat { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .card-feat:hover { background: rgba(157, 78, 221, 0.05); border-color: rgba(157, 78, 221, 0.3); transform: translateY(-4px); }
-        .sidebar { background: rgba(10, 5, 15, 0.8); border-right: 1px solid rgba(255, 255, 255, 0.05); }
-        input, select, textarea { background: rgba(255, 255, 255, 0.03) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: white !important; outline: none !important; }
-        input:focus { border-color: #9d4edd !important; }
-        .swal2-popup { background: #1a1a2e !important; color: white !important; border-radius: 24px !important; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; }
+        .glass-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); transition: 0.3s; }
+        .glass-card:hover { border-color: rgba(157, 78, 221, 0.3); transform: translateY(-2px); }
+        .sidebar { background: #080808; border-right: 1px solid #151515; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
 
+    <!-- Script de Proteção de Rota - Executa antes de carregar o HTML -->
+    <script>
+        const session = localStorage.getItem('nekotina_session');
+        if (!session) {
+            window.location.href = 'index.html';
+        }
+        const user = JSON.parse(session);
+    </script>
+
     <!-- Sidebar -->
-    <aside class="sidebar w-full md:w-72 p-8 flex flex-col z-20">
-        <div class="flex items-center gap-3 mb-12">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-                <i data-lucide="cat" class="text-white w-6 h-6"></i>
+    <aside class="w-full md:w-72 sidebar p-8 flex flex-col z-20">
+        <div class="flex items-center gap-3 mb-12 px-2">
+            <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-600/20">
+                <i data-lucide="zap" class="text-white w-6 h-6"></i>
             </div>
             <span class="text-xl font-bold tracking-tight">Nekotina</span>
         </div>
 
         <nav class="space-y-2 flex-1">
-            <button onclick="showSection('home')" class="nav-btn w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-white/5 text-purple-400 font-semibold">
-                <i data-lucide="layout-grid" class="w-5 h-5"></i> Dashboard
-            </button>
-            <button onclick="showSection('automsg')" class="nav-btn w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/5 hover:text-white transition-all">
-                <i data-lucide="message-square" class="w-5 h-5"></i> Auto Mensagens
-            </button>
-            <button onclick="openModal('modalRenovar')" class="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-amber-400 hover:bg-amber-400/10 transition-all font-semibold mt-4">
-                <i data-lucide="credit-card" class="w-5 h-5"></i> Renovar Plano
-            </button>
+            <a href="#" class="flex items-center gap-4 px-5 py-4 rounded-2xl bg-white/5 text-purple-400 font-bold">
+                <i data-lucide="layout-grid" class="w-5 h-5"></i> Início
+            </a>
+            <a href="#" class="flex items-center gap-4 px-5 py-4 rounded-2xl text-gray-500 hover:bg-white/5 hover:text-white transition-all">
+                <i data-lucide="settings" class="w-5 h-5"></i> Perfil/Senha
+            </a>
         </nav>
 
-        <div class="mt-auto pt-6 border-t border-white/5 space-y-4">
-            <div class="bg-white/5 p-4 rounded-2xl">
-                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Sessão Ativa</p>
-                <p id="timer" class="text-lg font-mono font-bold text-purple-400 mt-1">--d --h --m --s</p>
+        <div class="mt-auto pt-6 border-t border-white/5">
+            <div class="bg-white/5 p-4 rounded-2xl mb-4">
+                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Plano Restante</p>
+                <p id="timer" class="text-lg font-mono font-bold text-purple-500 mt-1">Calculando...</p>
             </div>
-            <button onclick="logout()" class="flex items-center gap-4 px-4 py-3 w-full rounded-2xl text-red-400 hover:bg-red-500/10 transition-all font-medium">
-                <i data-lucide="log-out" class="w-5 h-5"></i> Sair
+            <button onclick="logout()" class="flex items-center gap-4 px-5 py-4 w-full rounded-2xl text-red-500 hover:bg-red-500/10 transition-all font-semibold">
+                <i data-lucide="log-out" class="w-5 h-5"></i> Sair do Painel
             </button>
         </div>
     </aside>
 
-    <!-- Main Content -->
+    <!-- Content -->
     <main class="flex-1 p-6 md:p-12 overflow-y-auto">
-        
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-            <div>
-                <h2 class="text-3xl font-extrabold text-white flex items-center gap-3">
-                    <span id="nome-grupo">Carregando...</span>
-                    <button onclick="editGroupName()" class="p-2 hover:bg-white/10 rounded-lg transition-all">
-                        <i data-lucide="edit-3" class="w-4 h-4 text-gray-500"></i>
-                    </button>
-                </h2>
-                <div class="flex items-center gap-2 mt-2">
-                    <span id="id-grupo" class="text-xs bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full font-bold">ID: ----</span>
-                    <span class="text-xs text-gray-600 font-bold uppercase tracking-tighter">Premium Database v2.0</span>
-                </div>
+        <header class="mb-12">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="bg-green-500/10 text-green-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-green-500/20">Ativo</span>
             </div>
-            
-            <div class="flex items-center gap-4">
-                <button onclick="openModal('modalConfigGeral')" class="bg-white/5 hover:bg-white/10 p-4 rounded-2xl border border-white/10 transition-all">
-                    <i data-lucide="settings-2" class="w-6 h-6 text-gray-400"></i>
-                </button>
-            </div>
+            <h2 class="text-4xl font-extrabold text-white">Olá, <span id="user-display-name" class="text-purple-500">Grupo</span>!</h2>
+            <p id="user-display-id" class="text-gray-500 text-sm mt-2 font-mono">ID: ...</p>
         </header>
 
-        <!-- Funcionalidades Grid -->
-        <div id="home-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Os cards serão gerados via JS para facilitar a manutenção -->
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card p-8 rounded-[32px]">
+                <div class="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500 mb-6">
+                    <i data-lucide="credit-card"></i>
+                </div>
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest">Modalidade</p>
+                <h3 id="plano-txt" class="text-2xl font-bold mt-1">Carregando...</h3>
+            </div>
+            <div class="glass-card p-8 rounded-[32px]">
+                <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-6">
+                    <i data-lucide="activity"></i>
+                </div>
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest">Status do Bot</p>
+                <h3 class="text-2xl font-bold mt-1 text-green-500">Operacional</h3>
+            </div>
+            <div class="glass-card p-8 rounded-[32px]">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-6">
+                    <i data-lucide="clock"></i>
+                </div>
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest">Expiração</p>
+                <h3 id="data-expira" class="text-lg font-bold mt-1">--/--/----</h3>
+            </div>
         </div>
 
-        <!-- Section: Auto Mensagens (Hidden by default) -->
-        <div id="automsg-section" class="hidden space-y-6">
-            <div class="flex justify-between items-center">
-                <h3 class="text-xl font-bold">Mensagens Programadas</h3>
-                <button onclick="openModal('modalAddAutoMsg')" class="bg-purple-600 hover:bg-purple-500 px-6 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2">
-                    <i data-lucide="plus" class="w-4 h-4"></i> Nova Mensagem
-                </button>
-            </div>
-            <div id="automsg-list" class="grid grid-cols-1 gap-4">
-                <!-- Listagem via JS -->
+        <!-- Info Table -->
+        <div class="mt-10 glass-card p-10 rounded-[40px]">
+            <h4 class="text-xl font-bold mb-8 flex items-center gap-3">
+                <i data-lucide="database" class="text-purple-500 w-5 h-5"></i> Dados do Sistema
+            </h4>
+            <div class="space-y-6">
+                <div class="flex justify-between items-center py-4 border-b border-white/5">
+                    <span class="text-gray-500 font-medium">Endereço do Grupo</span>
+                    <span class="font-mono text-sm bg-white/5 px-3 py-1 rounded-lg" id="full-id">---</span>
+                </div>
+                <div class="flex justify-between items-center py-4 border-b border-white/5">
+                    <span class="text-gray-500 font-medium">Nome Registrado</span>
+                    <span class="font-bold text-purple-400" id="full-name">---</span>
+                </div>
+                <div class="flex justify-between items-center py-4">
+                    <span class="text-gray-500 font-medium">Conexão RDP</span>
+                    <span class="text-green-500 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div> Estável</span>
+                </div>
             </div>
         </div>
     </main>
 
-    <!-- Modais Reutilizáveis (Estrutura Única para Design Consistente) -->
-    <div id="modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass w-full max-w-lg rounded-[32px] overflow-hidden animate-fade-in">
-            <div class="p-8 border-b border-white/5 flex justify-between items-center">
-                <h3 id="modal-title" class="text-xl font-bold text-white">Configuração</h3>
-                <button onclick="closeModal()" class="text-gray-500 hover:text-white"><i data-lucide="x"></i></button>
-            </div>
-            <div id="modal-content" class="p-8 space-y-6">
-                <!-- Conteúdo Dinâmico -->
-            </div>
-            <div class="p-8 bg-black/20 flex justify-end gap-3">
-                <button onclick="closeModal()" class="px-6 py-3 text-gray-400 font-bold hover:text-white">Cancelar</button>
-                <button id="modal-save-btn" class="bg-purple-600 px-8 py-3 rounded-2xl font-bold hover:bg-purple-500 transition-all">Salvar Alterações</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        const BRIDGE_URL = 'https://meristic-unironical-gail.ngrok-free.dev';
-        let currentUser = JSON.parse(localStorage.getItem('session'));
+        // Preencher dados da sessão
+        document.getElementById('user-display-name').innerText = user.nome || 'Grupo';
+        document.getElementById('full-name').innerText = user.nome || 'Nenhum nome definido';
+        document.getElementById('user-display-id').innerText = `ID: ${user.id}`;
+        document.getElementById('full-id').innerText = user.id;
+        document.getElementById('plano-txt').innerText = user.plano || 'Padrão';
+        
+        const dataFormatada = new Date(user.expira).toLocaleDateString('pt-BR');
+        document.getElementById('data-expira').innerText = dataFormatada;
 
-        if(!currentUser) window.location.href = 'index.html';
-
-        lucide.createIcons();
-
-        // Configuração das funcionalidades (Baseado no seu PHP)
-        const FEATURES = [
-            { id: 'autohorarios', title: 'Auto Horários', desc: 'Pagantes automáticos', icon: 'calendar', color: 'text-amber-400', cfg: false },
-            { id: 'open_close', title: 'Auto Abrir', desc: 'Horário de fechamento', icon: 'clock', color: 'text-blue-400', cfg: true },
-            { id: 'antiflood', title: 'Anti-Flood', desc: 'Bloqueio de spammer', icon: 'zap', color: 'text-red-400', cfg: true },
-            { id: 'antilong', title: 'Anti-Texto', desc: 'Limite de caracteres', icon: 'align-left', color: 'text-cyan-400', cfg: true },
-            { id: 'welcome', title: 'Boas-Vindas', desc: 'Saudação de entrada', icon: 'door-open', color: 'text-green-400', cfg: true },
-            { id: 'antimedia', title: 'Anti-Mídia', desc: 'Filtro de imagens/áudio', icon: 'image', color: 'text-indigo-400', cfg: true },
-            { id: 'antiporno', title: 'Anti-Pornô', desc: 'Detecção de conteúdo +18', icon: 'shield-alert', color: 'text-rose-500', cfg: false },
-            { id: 'antilink', title: 'Anti-Link', desc: 'Bloqueia convites externos', icon: 'link', color: 'text-amber-500', cfg: true }
-        ];
-
-        // Inicializar Dashboard
-        async function init() {
-            document.getElementById('id-grupo').innerText = `ID: ${currentUser.usuario}`;
-            document.getElementById('nome-grupo').innerText = currentUser.nome || 'Nekotina Group';
-            
-            renderFeatures();
-            updateTimer();
-            loadAutoMsgs();
-        }
-
-        function renderFeatures() {
-            const grid = document.getElementById('home-section');
-            grid.innerHTML = FEATURES.map(feat => `
-                <div class="card-feat p-6 rounded-[28px] flex flex-col justify-between h-52 relative group">
-                    <div class="flex justify-between items-start">
-                        <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center ${feat.color}">
-                            <i data-lucide="${feat.icon}"></i>
-                        </div>
-                        ${feat.cfg ? `
-                            <button onclick="openConfig('${feat.id}')" class="p-2 text-gray-600 hover:text-white transition-colors">
-                                <i data-lucide="settings" class="w-4 h-4"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-white mt-4">${feat.title}</h4>
-                        <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">${feat.desc}</p>
-                    </div>
-                    <div class="flex items-center mt-4">
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" onchange="toggleFeature('${feat.id}', this)" class="sr-only peer">
-                            <div class="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-gray-400 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 peer-checked:after:bg-white"></div>
-                        </label>
-                    </div>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        async function toggleFeature(id, el) {
-            const state = el.checked ? 1 : 0;
-            try {
-                const res = await fetch(BRIDGE_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-                    body: JSON.stringify({ acao: 'toggle', funcao: id, estado: state, user: currentUser.usuario })
-                });
-                if(!res.ok) throw new Error();
-                showToast(`Funcionalidade ${id} ${state ? 'Ativada' : 'Desativada'}`, 'success');
-            } catch (e) {
-                el.checked = !el.checked;
-                showToast("Falha ao comunicar com o servidor", "error");
-            }
-        }
-
-        // Simulação de modais de configuração
-        function openConfig(id) {
-            const overlay = document.getElementById('modal-overlay');
-            const title = document.getElementById('modal-title');
-            const content = document.getElementById('modal-content');
-            const saveBtn = document.getElementById('modal-save-btn');
-
-            overlay.classList.remove('hidden');
-            title.innerText = `Configurar ${id.toUpperCase()}`;
-            
-            // Conteúdo dinâmico baseado no ID (Exemplo para Anti-Flood)
-            if(id === 'antiflood') {
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <label class="block text-sm text-gray-400">Limite de Mensagens (por 5 seg)</label>
-                        <input type="number" id="flood-limit" class="w-full p-4 rounded-xl" value="5">
-                        <label class="block text-sm text-gray-400">Punição</label>
-                        <select id="flood-action" class="w-full p-4 rounded-xl">
-                            <option value="ban">Banir Usuário</option>
-                            <option value="warn">Apenas Deletar</option>
-                        </select>
-                    </div>
-                `;
-            } else if(id === 'welcome') {
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <label class="block text-sm text-gray-400">Texto de Boas-Vindas</label>
-                        <textarea id="welcome-text" class="w-full p-4 rounded-xl h-32" placeholder="Olá #user#, bem-vindo ao #group#!"></textarea>
-                    </div>
-                `;
-            } else {
-                content.innerHTML = `<p class="text-gray-500 italic">Configurações avançadas em breve para esta função...</p>`;
-            }
-
-            saveBtn.onclick = () => saveConfig(id);
-            lucide.createIcons();
-        }
-
-        function closeModal() {
-            document.getElementById('modal-overlay').classList.add('hidden');
-        }
-
-        function showToast(msg, icon) {
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: icon,
-                title: msg,
-                showConfirmButton: false,
-                timer: 2000,
-                background: '#1a1a2e',
-                color: '#fff'
-            });
-        }
-
-        function updateTimer() {
-            // Timer baseado no seu PHP (simulado aqui)
-            let expira = currentUser.expira || (Date.now() + 86400000);
+        // Timer de Expiração
+        function startTimer() {
+            const expiraMs = user.expira;
             setInterval(() => {
-                const diff = expira - Date.now();
-                if(diff <= 0) {
+                const agora = Date.now();
+                const diff = expiraMs - agora;
+
+                if (diff <= 0) {
                     document.getElementById('timer').innerText = "EXPIRADO";
                     return;
                 }
-                const d = Math.floor(diff / 86400000);
-                const h = Math.floor((diff % 86400000) / 3600000);
-                const m = Math.floor((diff % 3600000) / 60000);
-                const s = Math.floor((diff % 60000) / 1000);
-                document.getElementById('timer').innerText = `${d}d ${h}h ${m}m ${s}s`;
-            }, 1000);
+
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                document.getElementById('timer').innerText = `${d}d ${h}h ${m}m`;
+            }, 60000);
+            
+            // Primeira execução imediata
+            const d = Math.floor((expiraMs - Date.now()) / (1000 * 60 * 60 * 24));
+            const h = Math.floor(((expiraMs - Date.now()) % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor(((expiraMs - Date.now()) % (1000 * 60 * 60)) / (1000 * 60));
+            document.getElementById('timer').innerText = `${d}d ${h}h ${m}m`;
         }
+        startTimer();
 
         function logout() {
-            localStorage.clear();
+            localStorage.removeItem('nekotina_session');
             window.location.href = 'index.html';
         }
 
-        window.onload = init;
+        lucide.createIcons();
     </script>
 </body>
 </html>
