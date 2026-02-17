@@ -10,36 +10,46 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; -webkit-tap-highlight-color: transparent; }
-        .glass { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); }
+        .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); backdrop-filter: blur(16px); }
         
-        /* Menu Mobile - Correção de Z-Index e Transição */
-        .sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        @media (max-width: 768px) {
-            .sidebar { 
-                position: fixed; top: 0; left: 0; height: 100vh; width: 85%; max-width: 300px;
-                background: #0a0a0a; z-index: 100; transform: translateX(-100%); 
-                border-right: 1px solid #222; box-shadow: 20px 0 50px rgba(0,0,0,0.5);
-            }
-            .sidebar.active { transform: translateX(0); }
-            .overlay { 
-                position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 90; 
-                opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(4px);
-            }
-            .overlay.active { opacity: 1; pointer-events: auto; }
-        }
-
-        /* Toggle Switch */
+        /* Switch */
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #222; transition: .4s; border-radius: 34px; border: 1px solid #333; }
         .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: #666; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #9333ea; border-color: #a855f7; box-shadow: 0 0 10px #9333ea; }
+        input:checked + .slider { background-color: #9333ea; border-color: #a855f7; }
         input:checked + .slider:before { transform: translateX(20px); background-color: white; }
 
         /* Botão WhatsApp */
-        .wa-float { position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; background: #25d366; border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 80; box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4); animation: pulse 3s infinite; transition: transform 0.2s; }
-        .wa-float:active { transform: scale(0.9); }
+        .wa-float { position: fixed; bottom: 20px; right: 20px; width: 55px; height: 55px; background: #25d366; border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 50; box-shadow: 0 4px 15px rgba(0,0,0,0.5); animation: pulse 3s infinite; }
         @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        /* MENU MOBILE (CORREÇÃO DE CAMADAS) */
+        @media (max-width: 768px) {
+            .sidebar { 
+                position: fixed; left: 0; top: 0; 
+                width: 85%; height: 100vh; 
+                background: #0a0a0a; z-index: 100; /* Z-Index Alto */
+                transform: translateX(-100%); 
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border-right: 1px solid #222;
+                box-shadow: 10px 0 50px rgba(0,0,0,0.5);
+            }
+            .sidebar.active { transform: translateX(0); }
+            
+            .overlay { 
+                display: none; position: fixed; inset: 0; 
+                background: rgba(0,0,0,0.8); z-index: 90; /* Abaixo da sidebar */
+                backdrop-filter: blur(4px);
+            }
+            .overlay.active { display: block; }
+            
+            /* Ajuste Header para ficar atrás do menu */
+            header { z-index: 80; position: relative; }
+        }
+        
+        /* SweetAlert sempre no topo */
+        div:where(.swal2-container) { z-index: 9999 !important; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
@@ -51,65 +61,64 @@
         const user = JSON.parse(session);
         let globalData = {};
         
-        // Sistema de Som Seguro
+        // Sons Seguros (Try/Catch para não travar o JS se falhar)
         const audioClick = new Audio('https://cdn.freesound.org/previews/256/256116_3263906-lq.mp3');
-        const playSnd = () => { audioClick.currentTime=0; audioClick.volume=0.3; audioClick.play().catch(()=>{}); };
+        const playSnd = () => { 
+            try { audioClick.currentTime=0; audioClick.volume=0.2; audioClick.play().catch(()=>{}); } catch(e){} 
+        };
     </script>
 
-    <!-- Overlay Mobile -->
-    <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
-
-    <!-- WhatsApp -->
+    <!-- Overlay e Zap -->
+    <div id="overlay" class="overlay" onclick="closeMenu()"></div>
     <a href="https://wa.me/5585992374198" target="_blank" class="wa-float">
-        <svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+        <svg width="30" height="30" fill="white" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
     </a>
 
     <!-- Header Mobile -->
-    <header class="md:hidden flex items-center justify-between p-5 bg-[#0a0a0a] border-b border-white/5 sticky top-0 z-30">
+    <header class="md:hidden flex items-center justify-between p-5 bg-[#0a0a0a] border-b border-white/5 sticky top-0">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg"><i data-lucide="cat" class="text-white w-6 h-6"></i></div>
-            <span class="font-extrabold text-xl font-[Fredoka]">Nekotina</span>
+            <span class="font-bold text-xl font-[Fredoka]">Nekotina</span>
         </div>
-        <button onclick="toggleSidebar()" class="p-2 text-gray-300 active:text-white transition-colors">
-            <i data-lucide="menu" class="w-7 h-7"></i>
+        <!-- Botão Menu com Z-Index e Hitbox maior -->
+        <button onclick="openMenu()" class="p-3 text-gray-300 active:text-white bg-white/5 rounded-xl">
+            <i data-lucide="menu" class="w-6 h-6"></i>
         </button>
     </header>
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar md:w-72 md:bg-[#0a0a0a] md:border-r border-white/5 p-6 flex flex-col z-50">
+    <aside id="sidebar" class="sidebar w-full md:w-72 md:bg-[#0a0a0a] md:border-r border-white/5 p-6 flex flex-col z-50">
         <div class="hidden md:flex items-center gap-3 mb-10 px-2">
             <div class="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg"><i data-lucide="cat" class="text-white w-7 h-7"></i></div>
             <span class="text-2xl font-black font-[Fredoka]">Nekotina</span>
         </div>
 
-        <!-- Music Player -->
         <div class="bg-white/5 p-3 rounded-xl mb-6 flex items-center gap-3 border border-white/5">
             <div class="w-10 h-10 bg-black/40 rounded-lg flex items-center justify-center text-purple-400"><i data-lucide="music" class="w-5 h-5 animate-pulse"></i></div>
             <div class="flex-1 overflow-hidden">
                 <p class="text-[10px] text-gray-400 font-bold uppercase truncate">Lofi Radio</p>
-                <button id="pBtn" onclick="toggleAudio()" class="text-[10px] bg-purple-600 hover:bg-purple-500 px-3 py-1 rounded text-white font-bold mt-1 w-full transition-colors">Play</button>
+                <button id="pBtn" onclick="toggleAudio()" class="text-[10px] bg-purple-600 hover:bg-purple-500 px-3 py-1 rounded text-white font-bold mt-1">Play</button>
             </div>
             <audio id="bgAudio" loop src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"></audio>
         </div>
 
         <nav class="space-y-3 flex-1">
-            <button onclick="nav('db')" class="nav-btn w-full flex items-center gap-4 px-4 py-4 rounded-xl bg-gradient-to-r from-purple-900/40 to-transparent text-purple-300 font-bold border-l-4 border-purple-500 transition-all"><i data-lucide="layout-grid"></i> Painel</button>
-            <button onclick="nav('am')" class="nav-btn w-full flex items-center gap-4 px-4 py-4 rounded-xl text-gray-400 hover:bg-white/5 transition-all"><i data-lucide="message-square"></i> Mensagens</button>
-            <button onclick="modalRenovar()" class="nav-btn w-full flex items-center gap-4 px-4 py-4 rounded-xl text-amber-500 hover:bg-amber-500/10 font-bold"><i data-lucide="gem"></i> Premium / PIX</button>
-            <button onclick="modalPerfil()" class="nav-btn w-full flex items-center gap-4 px-4 py-4 rounded-xl text-gray-400 hover:bg-white/5"><i data-lucide="user"></i> Perfil</button>
+            <button onclick="nav('db')" class="w-full flex items-center gap-4 px-4 py-4 rounded-xl bg-white/5 text-purple-400 font-bold border-l-4 border-purple-500 transition-all"><i data-lucide="layout-grid"></i> Painel</button>
+            <button onclick="nav('am')" class="w-full flex items-center gap-4 px-4 py-4 rounded-xl text-gray-400 hover:bg-white/5 transition-all"><i data-lucide="message-square"></i> Mensagens</button>
+            <button onclick="modalRenovar()" class="w-full flex items-center gap-4 px-4 py-4 rounded-xl text-amber-500 hover:bg-amber-500/10 font-bold"><i data-lucide="gem"></i> Premium / PIX</button>
+            <button onclick="modalPerfil()" class="w-full flex items-center gap-4 px-4 py-4 rounded-xl text-gray-400 hover:bg-white/5"><i data-lucide="user"></i> Perfil</button>
         </nav>
 
         <div class="mt-auto pt-6 border-t border-white/5">
             <div class="bg-gradient-to-br from-purple-900/20 to-black p-4 rounded-2xl border border-purple-500/20 mb-4">
                 <p class="text-[10px] text-gray-400 font-bold uppercase">Expira em:</p>
-                <p id="timer" class="text-lg font-mono font-bold text-white mt-1">Carregando...</p>
+                <p id="timer" class="text-lg font-mono font-bold text-white mt-1">...</p>
             </div>
             <button onclick="logout()" class="w-full py-4 rounded-xl text-red-500 bg-red-500/5 hover:bg-red-500 hover:text-white transition-all font-bold">Sair</button>
         </div>
     </aside>
 
     <main class="flex-1 p-5 md:p-10 overflow-y-auto w-full relative">
-        <!-- V-DB -->
         <div id="v-db">
             <div class="mb-10">
                 <h2 class="text-4xl font-extrabold text-white">Olá, <span class="text-purple-500" id="gp-name">Grupo</span></h2>
@@ -117,19 +126,13 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" id="g-cards"></div>
         </div>
-
-        <!-- V-AM -->
         <div id="v-am" class="hidden">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl font-extrabold">Auto Mensagens</h2>
-                <button onclick="newMsg()" class="bg-purple-600 hover:bg-purple-500 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-purple-600/20 transition-transform active:scale-95"><i data-lucide="plus-circle"></i> Nova</button>
-            </div>
+            <div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-extrabold">Auto Mensagens</h2><button onclick="newMsg()" class="bg-purple-600 hover:bg-purple-500 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all"><i data-lucide="plus-circle"></i> Nova</button></div>
             <div id="m-list" class="space-y-4 pb-20"></div>
         </div>
     </main>
 
     <script>
-        // CONFIGURAÇÕES
         const cards = [
             { id: 'antilink', t: 'Anti-Link', d: 'Bloqueia links', i: 'link', c: 'amber', cfg: true },
             { id: 'antiporno', t: 'Anti-Pornô', d: 'Bloqueia +18', i: 'shield-alert', c: 'red', cfg: true },
@@ -141,93 +144,71 @@
             { id: 'autohorarios', t: 'Auto Horários', d: 'Status auto', i: 'calendar', c: 'orange' }
         ];
 
-        // INICIALIZAÇÃO
         async function init() {
             try {
                 const res = await fetch(API, { method: 'POST', body: JSON.stringify({ acao: 'get_config', id: user.id }) });
                 const d = await res.json();
-                
                 globalData = d;
                 document.getElementById('gp-name').innerText = d.nome || user.nome || 'Grupo';
                 document.getElementById('gp-id').innerText = user.id;
-                
                 document.getElementById('g-cards').innerHTML = cards.map((c, i) => `
-                    <div class="glass p-5 rounded-[24px] flex flex-col justify-between h-44 relative group" style="animation-delay: ${i*50}ms">
+                    <div class="glass-card p-5 rounded-[24px] flex flex-col justify-between h-44 relative group" style="animation-delay: ${i*50}ms">
                         <div class="flex justify-between items-start z-10">
                             <div class="w-10 h-10 rounded-xl bg-${c.c}-500/10 flex items-center justify-center text-${c.c}-500 group-hover:scale-110 transition-transform"><i data-lucide="${c.i}"></i></div>
                             ${c.cfg ? `<button onclick="playSnd(); config('${c.id}')" class="text-gray-500 hover:text-white p-2 rounded-full hover:bg-white/5 active:bg-white/10"><i data-lucide="settings" class="w-4 h-4"></i></button>` : ''}
                         </div>
-                        <div class="z-10">
-                            <h4 class="font-bold text-base text-white group-hover:text-${c.c}-400 transition-colors">${c.t}</h4>
-                            <p class="text-[10px] text-gray-500 uppercase font-bold mt-1">${c.d}</p>
-                        </div>
-                        <div class="flex items-center justify-between mt-2 z-10">
-                            <span class="text-[10px] font-black ${d.status[c.id]?'text-purple-400':'text-gray-700'}">${d.status[c.id]?'ATIVO':'OFF'}</span>
-                            <label class="switch"><input type="checkbox" onchange="tgl('${c.id}', this)" ${d.status[c.id]?'checked':''}><span class="slider"></span></label>
-                        </div>
+                        <div class="z-10"><h4 class="font-bold text-base text-white group-hover:text-${c.c}-400 transition-colors">${c.t}</h4><p class="text-[10px] text-gray-500 uppercase font-bold mt-1">${c.d}</p></div>
+                        <div class="flex items-center justify-between mt-2 z-10"><span class="text-[10px] font-black ${d.status[c.id]?'text-purple-400':'text-gray-700'}">${d.status[c.id]?'ATIVO':'OFF'}</span><label class="switch"><input type="checkbox" onchange="tgl('${c.id}', this)" ${d.status[c.id]?'checked':''}><span class="slider"></span></label></div>
                         <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-${c.c}-500/10 rounded-full blur-2xl group-hover:bg-${c.c}-500/20 transition-all"></div>
                     </div>`).join('');
-                
                 renderMsgs(d.autoMsgs);
                 startT(d.expira);
                 lucide.createIcons();
-            } catch(e) { console.error(e); }
+            } catch(e) {}
         }
 
         function renderMsgs(msgs) {
             const list = document.getElementById('m-list');
-            list.innerHTML = msgs.length ? msgs.map((m, i) => `
-                <div class="glass p-4 rounded-2xl flex gap-4 items-center border border-white/5 hover:border-purple-500/30 transition-all">
-                    ${m.imagemPreview ? `<img src="${m.imagemPreview}" class="w-16 h-16 object-cover rounded-lg bg-black/30">` : `<div class="w-16 h-16 bg-white/5 rounded-lg flex justify-center items-center text-gray-600"><i data-lucide="file-text"></i></div>`}
-                    <div class="flex-1 w-full overflow-hidden">
-                        <p class="text-sm font-bold text-gray-200 truncate">${m.texto || 'Imagem'}</p>
-                        <p class="text-[10px] text-gray-500 mt-1">${m.tempo}m | ${m.mencionarTodos ? '@todos' : ''}</p>
-                    </div>
-                    <button onclick="playSnd(); delMsg(${i})" class="w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
-                </div>`).join('') : '<p class="text-center text-gray-600 glass p-8 rounded-2xl">Nenhuma mensagem.</p>';
+            list.innerHTML = msgs.length ? msgs.map((m, i) => `<div class="glass-card p-4 rounded-2xl flex gap-4 items-center border border-white/5 hover:border-purple-500/30 transition-all">${m.imagemPreview ? `<img src="${m.imagemPreview}" class="w-16 h-16 object-cover rounded-lg bg-black/30">` : `<div class="w-16 h-16 bg-white/5 rounded-lg flex justify-center items-center text-gray-600"><i data-lucide="file-text"></i></div>`}<div class="flex-1 w-full overflow-hidden"><p class="text-sm font-bold text-gray-200 truncate">${m.texto || 'Imagem'}</p><p class="text-[10px] text-gray-500 mt-1">${m.tempo}m | ${m.mencionarTodos ? '@todos' : ''}</p></div><button onclick="playSnd(); delMsg(${i})" class="w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"><i data-lucide="trash-2" class="w-5 h-5"></i></button></div>`).join('') : '<p class="text-center text-gray-600 glass-card p-8 rounded-2xl">Vazio.</p>';
             lucide.createIcons();
         }
 
-        // LÓGICA DO MENU MOBILE (Corrigida)
-        function toggleSidebar() {
-            const sb = document.getElementById('sidebar');
-            const ov = document.getElementById('overlay');
-            
-            // Alterna classes
-            if (sb.classList.contains('active')) {
-                sb.classList.remove('active');
-                ov.classList.remove('active');
-            } else {
-                playSnd();
-                sb.classList.add('active');
-                ov.classList.add('active');
-            }
+        // FUNÇÕES UI
+        function openMenu() {
+            playSnd();
+            document.getElementById('sidebar').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
         }
-
-        // Navegação (Fecha menu automaticamente)
+        function closeMenu() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        }
         function nav(i) {
             playSnd();
             document.getElementById('v-db').classList.toggle('hidden', i !== 'db');
             document.getElementById('v-am').classList.toggle('hidden', i !== 'am');
-            
-            // Fecha menu se estiver aberto (mobile)
-            document.getElementById('sidebar').classList.remove('active');
-            document.getElementById('overlay').classList.remove('active');
+            closeMenu();
         }
+        let isP=false; function toggleAudio(){ const a=document.getElementById('bgAudio'); if(isP)a.pause(); else a.play(); isP=!isP; document.getElementById('pBtn').innerText=isP?"Pause":"Play"; }
+        function logout(){ localStorage.clear(); window.location.href='index.html'; }
+        function startT(e){ setInterval(()=>{const d=e-Date.now();document.getElementById('timer').innerText=d>0?`${Math.floor(d/86400000)}d ${Math.floor((d%86400000)/3600000)}h`:"EXPIRADO"},1000)}
 
-        // MODAIS DE CONFIGURAÇÃO (Corrigido acesso a globalData.configs)
+        // AÇÕES SERVIDOR
+        async function tgl(f, el) { playSnd(); await fetch(API, { method: 'POST', body: JSON.stringify({ acao: 'toggle', id: user.id, funcao: f, estado: el.checked ? 1 : 0 }) }); init(); }
+        async function newMsg() { playSnd(); const { value: f } = await Swal.fire({ title: 'Nova Mensagem', background: '#111', color: '#fff', confirmButtonColor: '#9333ea', html: `<input id="am-i" type="file" class="mb-3 text-xs text-gray-500 w-full"><textarea id="am-t" class="w-full bg-white/5 p-3 rounded h-24 text-white mb-2" placeholder="Texto..."></textarea><input id="am-m" type="number" value="30" class="bg-white/5 p-2 rounded text-white w-full text-center">`, preConfirm: () => new Promise(res => { const fi = document.getElementById('am-i').files[0]; const d = { texto: document.getElementById('am-t').value, tempo: document.getElementById('am-m').value, mencionarTodos: true, fixar: false, imagem: null }; if(fi){ const r=new FileReader(); r.onload=e=>{d.imagem=e.target.result; res(d);}; r.readAsDataURL(fi); } else res(d); }) }); if(f) { await fetch(API, { method: 'POST', body: JSON.stringify({ acao: 'add_automsg', id: user.id, msg: f }) }); init(); } }
+        async function delMsg(idx) { await fetch(API, { method: 'POST', body: JSON.stringify({ acao: 'del_automsg', id: user.id, index: idx }) }); init(); }
+
+        // CONFIGURAÇÃO MODAIS
         async function config(id) {
             playSnd();
+            closeMenu(); // FECHA MENU ANTES DE ABRIR MODAL
             const cfg = globalData.configs || {};
             const banConf = cfg.banConf || {};
 
             if(['antilink', 'antiporno', 'antifake'].includes(id)) {
                 const actNow = banConf[id] || 'ban';
-                const { value: act } = await Swal.fire({ 
-                    title: `Configurar ${id}`, input: 'select', inputOptions: { 'ban': 'Banir', 'warn': 'Apagar' }, inputValue: actNow, 
-                    background: '#111', color: '#fff', confirmButtonColor: '#9333ea', customClass: { popup: 'glass' }
-                });
-                if(act) await post('save_ban_action', { type: id, act });
+                const { value: act } = await Swal.fire({ title: `Configurar ${id}`, input: 'select', inputOptions: { 'ban': 'Banir e Remover', 'warn': 'Apenas Apagar' }, inputValue: actNow, background: '#111', color: '#fff', confirmButtonColor: '#9333ea', customClass: { popup: 'glass-card' } });
+                if (act) await post('save_ban_action', { type: id, act });
             }
             if(id==='welcome'){
                 const w = cfg.welcome || {};
@@ -242,20 +223,21 @@
             }
             if(id==='antimedia'){
                 const am = globalData.antimedia;
-                await Swal.fire({title:'Mídia',background:'#111',color:'#fff',showConfirmButton:false,html:['image','video','audio','sticker'].map(t=>`<div class="flex justify-between bg-white/5 p-3 rounded-xl mb-2 items-center"><span class="capitalize font-bold">${t}</span><input type="checkbox" onchange="post('toggle_antimedia',{tipo:'${t}',estado:this.checked?1:0})" ${am[t]?'checked':''} class="w-5 h-5 accent-purple-600"></div>`).join('')});
+                await Swal.fire({title:'Mídia',background:'#111',color:'#fff',showConfirmButton:false,html:['image','video','audio','sticker'].map(t=>`<div class="flex justify-between bg-white/5 p-2 rounded mb-1 items-center"><span class="capitalize">${t}</span><input type="checkbox" onchange="post('toggle_antimedia',{tipo:'${t}',estado:this.checked?1:0})" ${am[t]?'checked':''} class="w-5 h-5 accent-purple-600"></div>`).join('')});
             }
             if(id==='open_close'){
                 const oc = cfg.open_close || {abrir:'08:00', fechar:'22:00'};
-                const {value:f}=await Swal.fire({title:'Horários',background:'#111',color:'#fff',html:`Abrir: <input id="op" type="time" value="${oc.abrir}" class="bg-white/5 p-2 rounded text-white mb-3 text-center w-full"> Fechar: <input id="cl" type="time" value="${oc.fechar}" class="bg-white/5 p-2 rounded text-white text-center w-full">`,preConfirm:()=>({abrir:document.getElementById('op').value, fechar:document.getElementById('cl').value})});
+                const {value:f}=await Swal.fire({title:'Horários',background:'#111',color:'#fff',html:`Abrir: <input id="op" type="time" value="${oc.abrir}" class="bg-white/5 p-2 rounded text-white mb-2 w-full text-center"> Fechar: <input id="cl" type="time" value="${oc.fechar}" class="bg-white/5 p-2 rounded text-white w-full text-center">`,preConfirm:()=>({abrir:document.getElementById('op').value, fechar:document.getElementById('cl').value})});
                 if(f)await post('save_open_close', f);
             }
         }
 
         async function modalRenovar() {
             playSnd();
-            const { value: d } = await Swal.fire({
-                title: 'Renovar Plano', background: '#111', color: '#fff', showConfirmButton: false,
-                html: `<div class="grid grid-cols-2 gap-3 mt-2"><button onclick="Swal.clickConfirm(); window.val={d:30,v:40}" class="bg-white/5 hover:bg-purple-600 border border-white/10 p-4 rounded-xl transition-all group"><div class="font-bold text-lg">Mensal</div><div class="text-xs text-gray-400 group-hover:text-white">R$ 40</div></button><button onclick="Swal.clickConfirm(); window.val={d:90,v:110}" class="bg-white/5 hover:bg-purple-600 border border-white/10 p-4 rounded-xl transition-all group"><div class="font-bold text-lg">Trimestral</div><div class="text-xs text-gray-400 group-hover:text-white">R$ 110</div></button></div>`
+            closeMenu();
+            const { value: dados } = await Swal.fire({
+                title: 'Renovar', background: '#111', color: '#fff', showConfirmButton: false,
+                html: `<div class="grid grid-cols-2 gap-3 mt-2"><button onclick="Swal.clickConfirm(); window.val={d:30,v:40}" class="bg-white/5 hover:bg-purple-600 border border-white/10 p-4 rounded-xl transition-all"><div class="font-bold text-lg">Mensal</div><div class="text-xs text-gray-400">R$ 40</div></button><button onclick="Swal.clickConfirm(); window.val={d:90,v:110}" class="bg-white/5 hover:bg-purple-600 border border-white/10 p-4 rounded-xl transition-all"><div class="font-bold text-lg">Trimestral</div><div class="text-xs text-gray-400">R$ 110</div></button></div>`
             });
             if (window.val) {
                 Swal.fire({ title: 'Gerando PIX...', didOpen: () => Swal.showLoading(), background:'#111', color:'#fff', allowOutsideClick: false });
@@ -278,16 +260,8 @@
             }
         }
 
-        // Funções Auxiliares
-        async function tgl(f, el) { playSnd(); await post('toggle', { funcao: f, estado: el.checked ? 1 : 0 }); }
-        async function newMsg() { playSnd(); const { value: f } = await Swal.fire({ title: 'Nova Mensagem', background: '#111', color: '#fff', confirmButtonColor: '#9333ea', html: `<input id="am-i" type="file" class="mb-3 text-xs text-gray-500 w-full bg-white/5 p-2 rounded"><textarea id="am-t" class="w-full bg-white/5 p-3 rounded h-24 text-white mb-2" placeholder="Texto..."></textarea><input id="am-m" type="number" value="30" class="bg-white/5 p-2 rounded text-white w-full text-center">`, preConfirm: () => new Promise(res => { const fi = document.getElementById('am-i').files[0]; const d = { texto: document.getElementById('am-t').value, tempo: document.getElementById('am-m').value, mencionarTodos: true, fixar: false, imagem: null }; if(fi){ const r=new FileReader(); r.onload=e=>{d.imagem=e.target.result; res(d);}; r.readAsDataURL(fi); } else res(d); }) }); if(f) await post('add_automsg', { msg: f }); }
-        async function delMsg(idx) { await post('del_automsg', { index: idx }); }
-        async function modalPerfil() { playSnd(); const {value:f} = await Swal.fire({title:'Perfil',background:'#111',color:'#fff',html:`<input id="pn" class="w-full bg-white/5 p-2 rounded mb-2 text-white" value="${document.getElementById('gp-name').innerText}"><input id="ps" class="w-full bg-white/5 p-2 rounded text-white" placeholder="Nova Senha">`,preConfirm:()=>({nome:document.getElementById('pn').value,senha:document.getElementById('ps').value})}); if(f){ if(f.nome)await post('save_group_name',{nome:f.nome}); if(f.senha)await post('alterar_senha',{nova_senha:f.senha}); } }
+        async function modalPerfil() { playSnd(); closeMenu(); const {value:f} = await Swal.fire({title:'Perfil',background:'#111',color:'#fff',html:`<input id="pn" class="w-full bg-white/5 p-2 rounded mb-2 text-white" value="${document.getElementById('gp-name').innerText}"><input id="ps" class="w-full bg-white/5 p-2 rounded text-white" placeholder="Nova Senha">`,preConfirm:()=>({nome:document.getElementById('pn').value,senha:document.getElementById('ps').value})}); if(f){ if(f.nome)await post('save_group_name',{nome:f.nome}); if(f.senha)await post('alterar_senha',{nova_senha:f.senha}); } }
         async function post(a, d) { await fetch(API, { method: 'POST', body: JSON.stringify({ acao: a, id: user.id, ...d }) }); init(); }
-        let isP=false; function toggleAudio(){ const a=document.getElementById('bgAudio'); if(isP)a.pause(); else a.play(); isP=!isP; document.getElementById('pBtn').innerText=isP?"Pause":"Play"; }
-        function startT(e){ setInterval(()=>{const d=e-Date.now();document.getElementById('timer').innerText=d>0?`${Math.floor(d/86400000)}d ${Math.floor((d%86400000)/3600000)}h`:"EXPIRADO"},1000)}
-        function logout(){ localStorage.clear(); window.location.href='index.html'; }
-        
         window.onload = init;
     </script>
 </body>
