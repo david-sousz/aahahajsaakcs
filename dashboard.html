@@ -2,32 +2,36 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nekotina - Dashboard Premium</title>
+    <!-- Viewport ajustado para Mobile sem zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nekotina - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; }
-        .glass-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); }
-        .sidebar { background: #080808; border-right: 1px solid #151515; }
-        .feature-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .feature-card:hover { border-color: #9d4edd; transform: translateY(-4px); background: rgba(157, 78, 221, 0.03); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; -webkit-tap-highlight-color: transparent; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); backdrop-filter: blur(16px); }
         
-        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        /* Mobile Sidebar */
+        .sidebar { transition: transform 0.3s ease; }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; transform: translateX(-100%); z-index: 50; width: 85%; height: 100vh; background: #0a0a0a; border-right: 1px solid #222; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+            .sidebar.active { transform: translateX(0); }
+            .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 40; backdrop-filter: blur(4px); display: none; }
+            .overlay.active { display: block; }
+        }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #222; transition: .4s; border-radius: 34px; border: 1px solid rgba(255,255,255,0.05); }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: #666; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #9d4edd; border-color: #c77dff; }
-        input:checked + .slider:before { transform: translateX(22px); background-color: white; }
-        
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #222; transition: .3s; border-radius: 34px; border: 1px solid #333; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: #666; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #7c3aed; border-color: #8b5cf6; }
+        input:checked + .slider:before { transform: translateX(20px); background-color: white; }
     </style>
 </head>
-<body class="flex flex-col md:flex-row min-h-screen overflow-hidden">
+<body class="flex flex-col md:flex-row min-h-screen">
 
     <script>
         const session = localStorage.getItem('nekotina_session');
@@ -36,80 +40,117 @@
         const API = 'https://meristic-unironical-gail.ngrok-free.dev';
     </script>
 
-    <!-- Sidebar -->
-    <aside class="w-full md:w-72 sidebar p-8 flex flex-col z-20">
-        <div class="flex items-center gap-3 mb-12">
-            <div class="w-12 h-12 bg-gradient-to-tr from-purple-600 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/20">
-                <i data-lucide="zap" class="text-white w-7 h-7"></i>
+    <!-- Overlay Mobile -->
+    <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
+
+    <!-- Mobile Header -->
+    <header class="md:hidden flex items-center justify-between p-5 bg-[#0a0a0a] border-b border-white/5 sticky top-0 z-30">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                <i data-lucide="zap" class="text-white w-5 h-5"></i>
             </div>
-            <span class="text-2xl font-black tracking-tighter">NEKOTINA</span>
+            <span class="font-extrabold tracking-tight text-lg">NEKOTINA</span>
         </div>
-        <nav class="space-y-3 flex-1">
-            <button onclick="showSection('dashboard')" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-white/5 text-purple-400 font-bold transition-all">
-                <i data-lucide="layout-dashboard"></i> Dashboard
+        <button onclick="toggleMenu()" class="p-2 text-gray-300 hover:text-white bg-white/5 rounded-lg">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-full md:w-72 sidebar md:bg-[#080808] md:border-r border-white/5 p-6 flex flex-col z-20">
+        <div class="hidden md:flex items-center gap-3 mb-10 px-2">
+            <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-600/20">
+                <i data-lucide="zap" class="text-white w-6 h-6"></i>
+            </div>
+            <span class="text-xl font-black tracking-tighter">NEKOTINA</span>
+        </div>
+
+        <nav class="space-y-2 flex-1">
+            <button onclick="showSection('dashboard')" class="nav-item w-full flex items-center gap-4 px-4 py-3.5 rounded-xl bg-white/5 text-purple-400 font-bold transition-all">
+                <i data-lucide="layout-grid" class="w-5 h-5"></i> Dashboard
             </button>
-            <button onclick="showSection('automsg')" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-gray-500 hover:bg-white/5 hover:text-white transition-all font-bold">
-                <i data-lucide="message-square"></i> Auto Mensagens
-            </button>
-            <button onclick="openModalPix()" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-amber-500 hover:bg-amber-500/10 transition-all font-bold">
-                <i data-lucide="gem"></i> Planos / Pix
+            <button onclick="showSection('automsg')" class="nav-item w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all font-bold">
+                <i data-lucide="message-square" class="w-5 h-5"></i> Auto Mensagens
             </button>
         </nav>
+
         <div class="mt-auto border-t border-white/5 pt-6 space-y-4">
-            <div class="bg-white/5 p-4 rounded-2xl">
-                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Sessão Ativa</p>
-                <p id="timer" class="text-lg font-mono font-bold text-purple-500 mt-1">00d 00h 00m</p>
+            <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Seu Plano</p>
+                <p id="timer" class="text-lg font-mono font-bold text-purple-400 mt-1">Carregando...</p>
             </div>
-            <button onclick="logout()" class="flex items-center gap-4 px-5 py-4 w-full rounded-2xl text-red-500 hover:bg-red-500/10 transition-all font-bold">
-                <i data-lucide="log-out"></i> Sair
+            <button onclick="logout()" class="flex items-center gap-4 px-4 py-3.5 w-full rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-bold">
+                <i data-lucide="log-out" class="w-5 h-5"></i> Sair da Conta
             </button>
         </div>
     </aside>
 
-    <!-- Main -->
-    <main class="flex-1 p-6 md:p-12 overflow-y-auto relative">
-        <!-- Dashboard Section -->
-        <div id="section-dashboard">
-            <header class="mb-10">
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-purple-500/10 text-purple-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-purple-500/20">Premium RDP</span>
-                </div>
-                <h2 class="text-4xl font-extrabold text-white">Olá, <span id="group-name">Grupo</span></h2>
-                <p class="text-gray-500 text-sm mt-1" id="group-id">...</p>
-            </header>
+    <!-- Main Content -->
+    <main class="flex-1 p-5 md:p-10 overflow-y-auto w-full">
+        
+        <!-- DASHBOARD -->
+        <div id="sec-dashboard">
+            <div class="mb-8">
+                <h2 class="text-3xl font-extrabold text-white leading-tight">Olá, <span class="text-purple-500" id="group-name">Grupo</span></h2>
+                <p class="text-gray-500 text-xs mt-1 font-mono bg-white/5 inline-block px-2 py-1 rounded-md" id="group-id">...</p>
+            </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="features-grid">
-                <!-- Cards via JS -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="cards-container">
+                <!-- Cards serão injetados aqui -->
             </div>
         </div>
 
-        <!-- AutoMsg Section -->
-        <div id="section-automsg" class="hidden">
-            <header class="mb-10 flex justify-between items-center">
+        <!-- AUTO MENSAGENS -->
+        <div id="sec-automsg" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h2 class="text-4xl font-extrabold text-white">Auto Mensagens</h2>
-                    <p class="text-gray-500 text-sm mt-1">Gerencie anúncios automáticos</p>
+                    <h2 class="text-3xl font-extrabold">Auto Mensagens</h2>
+                    <p class="text-gray-500 text-sm">Gerencie seus anúncios automáticos</p>
                 </div>
-                <button onclick="addAutoMsg()" class="bg-purple-600 hover:bg-purple-500 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all">
-                    <i data-lucide="plus" class="w-5 h-5"></i> Nova Mensagem
+                <button onclick="newAutoMsg()" class="w-full md:w-auto bg-purple-600 hover:bg-purple-500 px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-600/20 active:scale-95">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i> Nova Mensagem
                 </button>
-            </header>
-            <div id="automsg-list" class="space-y-4">
-                <!-- Listagem via JS -->
+            </div>
+
+            <div id="msg-list" class="space-y-4 pb-20">
+                <!-- Lista de mensagens -->
             </div>
         </div>
+
     </main>
 
     <script>
-        const cards = [
-            { id: 'antilink', t: 'Anti-Link', d: 'Bloqueio de links', i: 'link', c: 'amber' },
-            { id: 'antiporno', t: 'Anti-Pornô', d: 'Detecção +18', i: 'shield-alert', c: 'red' },
-            { id: 'antiflood', t: 'Anti-Flood', d: 'Bloqueio de Spam', i: 'zap', c: 'purple', cfg: true },
-            { id: 'welcome', t: 'Boas-Vindas', d: 'Saudação de entrada', i: 'door-open', c: 'green', cfg: true },
-            { id: 'antimedia', t: 'Anti-Mídia', d: 'Bloqueio seletivo', i: 'image', c: 'blue', cfg: true },
-            { id: 'antifake', t: 'Anti-Fake', d: 'Bloqueia números fake', i: 'user-x', c: 'gray' },
-            { id: 'open_close', t: 'Auto Abrir', d: 'Controle de horários', i: 'clock', c: 'cyan', cfg: true },
-            { id: 'autohorarios', t: 'Auto Horários', d: 'Minutos pagantes', i: 'calendar', c: 'orange' }
+        // Funções UI Mobile
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function showSection(id) {
+            document.getElementById('sec-dashboard').classList.toggle('hidden', id !== 'dashboard');
+            document.getElementById('sec-automsg').classList.toggle('hidden', id !== 'automsg');
+            
+            // Atualiza estilo dos botões do menu
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('bg-white/5', 'text-purple-400');
+                btn.classList.add('text-gray-400');
+            });
+            event.currentTarget.classList.add('bg-white/5', 'text-purple-400');
+            event.currentTarget.classList.remove('text-gray-400');
+
+            if(window.innerWidth < 768) toggleMenu();
+        }
+
+        // Lógica Principal
+        const cardsDef = [
+            { id: 'antilink', t: 'Anti-Link', d: 'Bloqueia links', i: 'link', c: 'amber' },
+            { id: 'antiporno', t: 'Anti-Pornô', d: 'Bloqueia +18', i: 'shield-alert', c: 'red' },
+            { id: 'antiflood', t: 'Anti-Flood', d: 'Evita Flood', i: 'zap', c: 'purple', cfg: true },
+            { id: 'welcome', t: 'Boas-Vindas', d: 'Saudação auto', i: 'door-open', c: 'green', cfg: true },
+            { id: 'antimedia', t: 'Anti-Mídia', d: 'Bloqueia fotos', i: 'image', c: 'blue', cfg: true },
+            { id: 'antifake', t: 'Anti-Fake', d: 'Bloqueia DDI', i: 'user-x', c: 'gray' },
+            { id: 'open_close', t: 'Auto Abrir', d: 'Horários gp', i: 'clock', c: 'cyan', cfg: true },
+            { id: 'autohorarios', t: 'Auto Horários', d: 'Pagantes auto', i: 'calendar', c: 'orange' }
         ];
 
         async function init() {
@@ -124,63 +165,63 @@
                 });
                 const data = await res.json();
                 
-                renderFeatures(data.status);
-                renderAutoMsgs(data.autoMsgs);
+                renderDashboard(data.status);
+                renderMessages(data.autoMsgs);
                 startTimer(user.expira);
             } catch (e) {
-                console.error("Erro ao carregar dados:", e);
-                Swal.fire('Erro', 'Não foi possível conectar ao servidor ponte.', 'error');
+                console.error(e);
             }
             lucide.createIcons();
         }
 
-        function renderFeatures(status) {
-            const grid = document.getElementById('features-grid');
-            grid.innerHTML = cards.map(c => {
-                const ativo = status && status[c.id] === true;
+        function renderDashboard(status) {
+            const container = document.getElementById('cards-container');
+            container.innerHTML = cardsDef.map(c => {
+                const active = status && status[c.id] === true;
                 return `
-                <div class="glass-card p-6 rounded-[32px] feature-card border border-white/5 flex flex-col justify-between h-52 relative overflow-hidden">
+                <div class="glass-card p-5 rounded-[24px] flex flex-col justify-between h-40 relative overflow-hidden group">
                     <div class="flex justify-between items-start z-10">
-                        <div class="w-12 h-12 rounded-2xl bg-${c.c}-500/10 flex items-center justify-center text-${c.c}-500">
-                            <i data-lucide="${c.i}"></i>
+                        <div class="w-10 h-10 rounded-xl bg-${c.c}-500/10 flex items-center justify-center text-${c.c}-500">
+                            <i data-lucide="${c.i}" class="w-5 h-5"></i>
                         </div>
-                        ${c.cfg ? `<button onclick="openConfig('${c.id}')" class="p-2 text-gray-600 hover:text-white transition-colors"><i data-lucide="settings" class="w-4 h-4"></i></button>` : ''}
+                        ${c.cfg ? `<button onclick="config('${c.id}')" class="text-gray-600 hover:text-white p-1"><i data-lucide="settings" class="w-4 h-4"></i></button>` : ''}
                     </div>
-                    <div class="z-10">
-                        <h4 class="font-bold text-base text-white">${c.t}</h4>
-                        <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mt-1">${c.d}</p>
+                    <div class="z-10 mt-2">
+                        <h4 class="font-bold text-sm text-white">${c.t}</h4>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-[10px] font-bold ${active ? 'text-purple-400' : 'text-gray-600'}">${active ? 'LIGADO' : 'DESLIGADO'}</span>
+                            <label class="switch">
+                                <input type="checkbox" onchange="toggle('${c.id}', this)" ${active ? 'checked' : ''}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between mt-4 z-10">
-                        <span class="text-[10px] font-black ${ativo ? 'text-purple-400' : 'text-gray-700'}">${ativo ? 'LIGADO' : 'DESLIGADO'}</span>
-                        <label class="switch">
-                            <input type="checkbox" onchange="toggleFeature('${c.id}', this)" ${ativo ? 'checked' : ''}>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-${c.c}-500/5 rounded-full blur-2xl"></div>
                 </div>`;
             }).join('');
             lucide.createIcons();
         }
 
-        function renderAutoMsgs(msgs) {
-            const list = document.getElementById('automsg-list');
+        function renderMessages(msgs) {
+            const list = document.getElementById('msg-list');
             if(!msgs || msgs.length === 0) {
-                list.innerHTML = `<div class="glass-card p-12 text-center text-gray-600 rounded-[32px]">Nenhuma mensagem automática configurada.</div>`;
+                list.innerHTML = `<div class="glass-card p-8 text-center rounded-3xl text-gray-500 text-sm">Nenhuma mensagem programada.</div>`;
                 return;
             }
             list.innerHTML = msgs.map((m, i) => `
-                <div class="glass-card p-6 rounded-3xl flex items-center justify-between border border-white/5">
-                    <div class="flex items-center gap-6">
-                        <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-purple-400">
-                            <i data-lucide="clock" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <p class="text-white font-bold">${m.texto.substring(0, 50)}${m.texto.length > 50 ? '...' : ''}</p>
-                            <p class="text-xs text-gray-500">Intervalo: ${m.tempo} min | ${m.mencionarTodos ? 'Menciona Todos' : 'Sem menção'}</p>
+                <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-start md:items-center">
+                    ${m.imagemPreview ? `<img src="${m.imagemPreview}" class="w-full md:w-20 h-32 md:h-20 object-cover rounded-xl bg-black/20">` : 
+                    `<div class="w-full md:w-20 h-16 md:h-20 bg-white/5 rounded-xl flex items-center justify-center text-gray-700"><i data-lucide="message-square-off"></i></div>`}
+                    
+                    <div class="flex-1 w-full">
+                        <p class="text-sm font-medium text-gray-200 line-clamp-2">${m.texto || 'Sem texto (apenas imagem)'}</p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-1 rounded-md font-bold uppercase">${m.tempo} min</span>
+                            ${m.mencionarTodos ? '<span class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-1 rounded-md font-bold uppercase">@todos</span>' : ''}
+                            ${m.fixar ? '<span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-1 rounded-md font-bold uppercase">Fixado</span>' : ''}
                         </div>
                     </div>
-                    <button onclick="delAutoMsg(${i})" class="w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                    
+                    <button onclick="deleteMsg(${i})" class="w-full md:w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors">
                         <i data-lucide="trash-2" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -188,76 +229,82 @@
             lucide.createIcons();
         }
 
-        async function toggleFeature(id, el) {
-            const estado = el.checked ? 1 : 0;
+        async function toggle(id, el) {
             await fetch(API, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-                body: JSON.stringify({ acao: 'toggle', id: user.id, funcao: id, estado: estado })
+                body: JSON.stringify({ acao: 'toggle', id: user.id, funcao: id, estado: el.checked ? 1 : 0 })
             });
-            init(); // Recarrega status
         }
 
-        function showSection(name) {
-            document.getElementById('section-dashboard').classList.toggle('hidden', name !== 'dashboard');
-            document.getElementById('section-automsg').classList.toggle('hidden', name !== 'automsg');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('text-purple-400', 'bg-white/5'));
+        async function deleteMsg(idx) {
+            await fetch(API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                body: JSON.stringify({ acao: 'del_automsg', id: user.id, index: idx })
+            });
+            init();
         }
 
-        async function addAutoMsg() {
-            const { value: formValues } = await Swal.fire({
-                title: 'Nova Auto Mensagem',
-                background: '#0a0a0a', color: '#fff',
+        async function newAutoMsg() {
+            const { value: form } = await Swal.fire({
+                title: 'Nova Mensagem',
+                background: '#111', color: '#fff', confirmButtonColor: '#7c3aed',
                 html: `
-                    <textarea id="swal-text" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white mb-4" placeholder="Texto da mensagem..."></textarea>
-                    <input id="swal-time" type="number" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white mb-4" placeholder="Tempo (minutos)">
-                    <div class="flex items-center gap-2">
-                        <input id="swal-mention" type="checkbox"> <label>Mencionar @todos?</label>
+                    <div class="space-y-3 text-left mt-2">
+                        <input id="sw-file" type="file" accept="image/*" class="text-sm w-full bg-white/5 p-2 rounded-lg text-gray-400">
+                        <textarea id="sw-txt" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white text-sm h-24 focus:border-purple-500 outline-none" placeholder="Digite sua mensagem..."></textarea>
+                        <div class="flex gap-2">
+                            <input id="sw-time" type="number" value="30" class="w-20 bg-black/30 border border-white/10 rounded-xl p-3 text-white text-sm text-center" placeholder="Min">
+                            <div class="flex-1 flex items-center gap-3 bg-black/30 border border-white/10 rounded-xl px-3">
+                                <input id="sw-all" type="checkbox" class="w-4 h-4 accent-purple-500"> <label for="sw-all" class="text-sm">Marcar Todos</label>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 bg-black/30 border border-white/10 rounded-xl p-3">
+                            <input id="sw-pin" type="checkbox" class="w-4 h-4 accent-amber-500"> <label for="sw-pin" class="text-sm">Fixar Mensagem</label>
+                        </div>
                     </div>
                 `,
-                focusConfirm: false,
-                preConfirm: () => ({
-                    texto: document.getElementById('swal-text').value,
-                    tempo: document.getElementById('swal-time').value,
-                    mencionarTodos: document.getElementById('swal-mention').checked
-                })
+                preConfirm: () => {
+                    return new Promise(resolve => {
+                        const file = document.getElementById('sw-file').files[0];
+                        const data = {
+                            texto: document.getElementById('sw-txt').value,
+                            tempo: document.getElementById('sw-time').value,
+                            mencionarTodos: document.getElementById('sw-all').checked,
+                            fixar: document.getElementById('sw-pin').checked,
+                            imagem: null
+                        };
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => { data.imagem = e.target.result; resolve(data); };
+                            reader.readAsDataURL(file);
+                        } else resolve(data);
+                    });
+                }
             });
 
-            if (formValues) {
+            if (form) {
                 await fetch(API, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-                    body: JSON.stringify({ acao: 'add_automsg', id: user.id, msg: formValues })
+                    body: JSON.stringify({ acao: 'add_automsg', id: user.id, msg: form })
                 });
                 init();
             }
         }
 
-        async function delAutoMsg(index) {
-            await fetch(API, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-                body: JSON.stringify({ acao: 'del_automsg', id: user.id, index: index })
-            });
-            init();
-        }
-
+        // Timer simples
         function startTimer(exp) {
-            const t = document.getElementById('timer');
-            const update = () => {
+            setInterval(() => {
                 const d = exp - Date.now();
-                if(d <= 0) return t.innerText = "EXPIRADO";
-                const dias = Math.floor(d / 86400000);
-                const h = Math.floor((d % 86400000) / 3600000);
-                const m = Math.floor((d % 3600000) / 60000);
-                t.innerText = `${dias}d ${h}h ${m}m`;
-            };
-            update();
-            setInterval(update, 60000);
+                document.getElementById('timer').innerText = d > 0 
+                    ? `${Math.floor(d/86400000)}d ${Math.floor((d%86400000)/3600000)}h ${Math.floor((d%3600000)/60000)}m` 
+                    : "EXPIRADO";
+            }, 1000);
         }
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
-
         window.onload = init;
     </script>
 </body>
