@@ -3,249 +3,444 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nekotina - Dashboard</title>
+    <title>Nekotina - Painel Vivo</title>
+    
+    <!-- Bibliotecas -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #050505; color: white; -webkit-tap-highlight-color: transparent; }
-        .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px); }
-        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #080808; color: white; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        
+        /* Vidro e Bordas */
+        .glass { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(16px); }
+        .glass:hover { border-color: rgba(157, 78, 221, 0.3); background: rgba(157, 78, 221, 0.05); }
+        
+        /* Animações */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes pulse-soft { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes slide-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .floating { animation: float 6s ease-in-out infinite; }
+        .slide-up { animation: slide-in 0.5s ease-out forwards; opacity: 0; }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+
+        /* Switch Toggle */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #222; transition: .3s; border-radius: 34px; border: 1px solid #333; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 2px; background-color: #666; transition: .3s; border-radius: 50%; }
-        input:checked + .slider { background-color: #7c3aed; border-color: #8b5cf6; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #1f1f1f; transition: .4s; border-radius: 34px; border: 1px solid #333; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: #666; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #9333ea; border-color: #a855f7; box-shadow: 0 0 10px rgba(147, 51, 234, 0.4); }
         input:checked + .slider:before { transform: translateX(20px); background-color: white; }
+
+        /* WhatsApp Button */
+        .whatsapp-float {
+            position: fixed; bottom: 24px; right: 24px; z-index: 100;
+            width: 60px; height: 60px; border-radius: 50%;
+            background: #25d366; box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.3s; animation: pulse-soft 3s infinite;
+        }
+        .whatsapp-float:hover { transform: scale(1.1); }
+
+        /* Mobile Sidebar */
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; transform: translateX(-100%); z-index: 50; width: 85%; height: 100vh; background: #0a0a0a; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-right: 1px solid #222; }
+            .sidebar.active { transform: translateX(0); box-shadow: 50px 0 100px rgba(0,0,0,0.5); }
+            .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 40; display: none; backdrop-filter: blur(4px); }
+            .overlay.active { display: block; }
+        }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
 
     <script>
-        const session = localStorage.getItem('nekotina_session');
-        if (!session) window.location.href = 'index.html';
-        const user = JSON.parse(session);
         const API = 'https://meristic-unironical-gail.ngrok-free.dev';
-        let serverData = {}; // Cache de dados do servidor
+        const session = localStorage.getItem('nekotina_session');
+        if(!session) window.location.href = 'index.html';
+        const user = JSON.parse(session);
+        
+        let globalData = {}; 
+        let audioClick, audioToggle;
+
+        // Sons
+        const playClick = () => { 
+            if(!audioClick) audioClick = new Audio('https://cdn.freesound.org/previews/256/256116_3263906-lq.mp3'); 
+            audioClick.volume = 0.2; audioClick.currentTime = 0; audioClick.play().catch(()=>{}); 
+        };
+        const playToggle = () => {
+            if(!audioToggle) audioToggle = new Audio('https://cdn.freesound.org/previews/364/364657_6687700-lq.mp3');
+            audioToggle.volume = 0.3; audioToggle.currentTime = 0; audioToggle.play().catch(()=>{});
+        }
     </script>
 
-    <!-- Sidebar / Mobile Header -->
-    <div id="overlay" class="fixed inset-0 bg-black/80 z-40 hidden" onclick="toggleMenu()"></div>
+    <!-- Overlay & WhatsApp -->
+    <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
     
-    <header class="md:hidden flex items-center justify-between p-4 bg-[#0a0a0a] border-b border-white/5 sticky top-0 z-30">
-        <span class="font-black text-lg text-purple-500">NEKOTINA</span>
-        <button onclick="toggleMenu()"><i data-lucide="menu" class="text-white"></i></button>
+    <a href="https://wa.me/5585992374198" target="_blank" class="whatsapp-float">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+    </a>
+
+    <!-- Mobile Header -->
+    <header class="md:hidden flex items-center justify-between p-5 bg-[#0a0a0a] border-b border-white/5 sticky top-0 z-30">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
+                <i data-lucide="cat" class="text-white w-6 h-6"></i>
+            </div>
+            <span class="font-bold text-lg font-[Fredoka] tracking-wider">NEKOTINA</span>
+        </div>
+        <button onclick="toggleMenu()" class="p-2 text-gray-300"><i data-lucide="menu"></i></button>
     </header>
 
-    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 w-72 bg-[#080808] border-r border-white/5 p-6 flex flex-col z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
-        <div class="hidden md:flex items-center gap-3 mb-10"><i data-lucide="zap" class="text-purple-500"></i> <span class="font-black text-xl">NEKOTINA</span></div>
-        <nav class="space-y-2 flex-1">
-            <button onclick="showSection('dashboard')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 text-purple-400 font-bold"><i data-lucide="layout-grid"></i> Painel</button>
-            <button onclick="showSection('automsg')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white"><i data-lucide="message-square"></i> Mensagens</button>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar w-full md:w-72 md:bg-[#0a0a0a] md:border-r border-white/5 p-6 flex flex-col z-20">
+        <div class="hidden md:flex items-center gap-3 mb-10 px-2 floating">
+            <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+                <i data-lucide="cat" class="text-white w-7 h-7"></i>
+            </div>
+            <span class="text-2xl font-black font-[Fredoka] tracking-wide">Nekotina</span>
+        </div>
+
+        <!-- Music Player Mini -->
+        <div class="bg-white/5 p-3 rounded-xl mb-6 flex items-center gap-3 border border-white/5 slide-up delay-100">
+            <div class="w-10 h-10 bg-black/40 rounded-lg flex items-center justify-center text-purple-400">
+                <i data-lucide="music" class="w-5 h-5 animate-pulse"></i>
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <p class="text-[10px] text-gray-400 font-bold uppercase truncate">Lofi Beats</p>
+                <button id="btn-play" onclick="toggleAudio()" class="text-[10px] bg-purple-600 hover:bg-purple-500 px-3 py-1 rounded text-white font-bold mt-1 transition-colors">Tocar Música</button>
+            </div>
+            <audio id="bg-audio" loop src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"></audio>
+        </div>
+
+        <nav class="space-y-3 flex-1 slide-up delay-200">
+            <button onclick="nav('dashboard')" class="w-full flex items-center gap-4 px-4 py-4 rounded-2xl bg-gradient-to-r from-purple-900/40 to-transparent text-purple-300 font-bold border-l-4 border-purple-500 transition-all hover:pl-6"><i data-lucide="layout-grid"></i> Dashboard</button>
+            <button onclick="nav('automsg')" class="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-gray-400 hover:text-white hover:bg-white/5 transition-all hover:pl-6"><i data-lucide="message-square"></i> Mensagens</button>
+            <button onclick="modalRenovar()" class="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-amber-500 hover:bg-amber-500/10 transition-all hover:pl-6 font-bold"><i data-lucide="gem"></i> Premium</button>
+            <button onclick="modalPerfil()" class="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-gray-400 hover:bg-white/5 transition-all hover:pl-6"><i data-lucide="user"></i> Perfil</button>
         </nav>
-        <button onclick="logout()" class="flex items-center gap-3 text-red-500 font-bold mt-auto"><i data-lucide="log-out"></i> Sair</button>
+
+        <div class="mt-auto pt-6 border-t border-white/5 slide-up delay-300">
+            <div class="bg-gradient-to-br from-purple-900/20 to-black p-4 rounded-2xl border border-purple-500/20 mb-4">
+                <p class="text-[10px] text-gray-400 font-bold uppercase">Tempo Restante</p>
+                <p id="timer" class="text-lg font-mono font-bold text-white mt-1">...</p>
+            </div>
+            <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white font-bold transition-all"><i data-lucide="log-out" class="w-5 h-5"></i> Sair</button>
+        </div>
     </aside>
 
-    <main class="flex-1 p-5 md:p-10 overflow-y-auto w-full">
+    <!-- Main -->
+    <main class="flex-1 p-5 md:p-10 overflow-y-auto w-full relative">
+        
         <!-- DASHBOARD -->
-        <div id="sec-dashboard">
-            <div class="mb-8">
-                <h2 class="text-3xl font-extrabold">Painel <span class="text-purple-500" id="gp-name">...</span></h2>
-                <p class="text-xs text-gray-500 font-mono mt-1" id="gp-id">...</p>
+        <div id="view-dashboard" class="slide-up">
+            <div class="mb-10">
+                <h2 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Olá, <span class="text-purple-500" id="gp-name">Grupo</span></h2>
+                <div class="flex items-center gap-3 mt-2">
+                    <span class="bg-white/10 px-3 py-1 rounded text-xs font-mono text-gray-400" id="gp-id">ID: ...</span>
+                    <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-[10px] font-bold uppercase border border-green-500/20 flex items-center gap-1"><span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Ativo</span>
+                </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="grid-cards"></div>
+            
+            <!-- Grid de Funcionalidades -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" id="grid-features">
+                <!-- Injetado via JS -->
+            </div>
         </div>
 
         <!-- AUTO MSG -->
-        <div id="sec-automsg" class="hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Auto Mensagens</h2>
-                <button onclick="newMsg()" class="bg-purple-600 px-4 py-2 rounded-lg font-bold text-sm flex gap-2"><i data-lucide="plus"></i> Nova</button>
+        <div id="view-automsg" class="hidden slide-up">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-extrabold">Auto Mensagens</h2>
+                    <p class="text-sm text-gray-500 mt-1">Mensagens programadas com imagem</p>
+                </div>
+                <button onclick="newMsg()" class="bg-purple-600 hover:bg-purple-500 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-purple-600/30 transition-transform hover:scale-105 active:scale-95 text-white">
+                    <i data-lucide="plus-circle"></i> Nova
+                </button>
             </div>
-            <div id="msg-list" class="space-y-3"></div>
+            <div id="msgs-list" class="space-y-4 pb-20"></div>
         </div>
+
     </main>
 
     <script>
-        const cards = [
-            { id: 'antilink', t: 'Anti-Link', d: 'Bloqueia links', i: 'link', c: 'amber' },
-            { id: 'antiporno', t: 'Anti-Pornô', d: 'Bloqueia +18', i: 'shield-alert', c: 'red' },
+        // Definição dos Cards
+        const features = [
+            { id: 'antilink', t: 'Anti-Link', d: 'Bloqueia links', i: 'link', c: 'amber', cfg: true },
+            { id: 'antiporno', t: 'Anti-Pornô', d: 'Bloqueia +18', i: 'shield-alert', c: 'red', cfg: true },
             { id: 'antiflood', t: 'Anti-Flood', d: 'Evita Spam', i: 'zap', c: 'purple', cfg: true },
-            { id: 'welcome', t: 'Boas-Vindas', d: 'Saudação', i: 'door-open', c: 'green', cfg: true },
-            { id: 'antimedia', t: 'Anti-Mídia', d: 'Filtra mídia', i: 'image', c: 'blue', cfg: true },
+            { id: 'welcome', t: 'Boas-Vindas', d: 'Saudação com foto', i: 'door-open', c: 'green', cfg: true },
+            { id: 'antimedia', t: 'Anti-Mídia', d: 'Filtra fotos/vídeo', i: 'image', c: 'blue', cfg: true },
             { id: 'antifake', t: 'Anti-Fake', d: 'Bloqueia DDI', i: 'user-x', c: 'gray' },
-            { id: 'open_close', t: 'Auto Abrir', d: 'Horários', i: 'clock', c: 'cyan', cfg: true },
-            { id: 'autohorarios', t: 'Auto Horários', d: 'Pagantes', i: 'calendar', c: 'orange' }
+            { id: 'open_close', t: 'Auto Abrir', d: 'Horários gp', i: 'clock', c: 'cyan', cfg: true },
+            { id: 'autohorarios', t: 'Auto Horários', d: 'Minutos pagantes', i: 'calendar', c: 'orange' }
         ];
 
+        // Inicialização
         async function init() {
-            document.getElementById('gp-name').innerText = user.nome || 'Grupo';
-            document.getElementById('gp-id').innerText = user.id;
-
             try {
-                const res = await fetch(API, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-                    body: JSON.stringify({ acao: 'get_config', id: user.id })
+                const res = await fetch(API, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
+                    body: JSON.stringify({ acao: 'get_config', id: user.id }) 
                 });
                 const data = await res.json();
-                serverData = data; // Cache global
                 
-                renderCards(data.status);
+                globalData = data;
+                document.getElementById('gp-name').innerText = data.nome || user.nome || 'Grupo';
+                document.getElementById('gp-id').innerText = user.id;
+                
+                renderDashboard(data.status);
                 renderMsgs(data.autoMsgs);
+                startTimer(data.expira || user.expira);
+                
             } catch(e) { console.error(e); }
             lucide.createIcons();
         }
 
-        function renderCards(status) {
-            document.getElementById('grid-cards').innerHTML = cards.map(c => {
-                const active = status[c.id] === true;
+        function renderDashboard(status) {
+            const grid = document.getElementById('grid-features');
+            grid.innerHTML = features.map((f, i) => {
+                const active = status[f.id] === true;
                 return `
-                <div class="glass-card p-5 rounded-[20px] flex flex-col justify-between h-40">
-                    <div class="flex justify-between items-start">
-                        <div class="w-10 h-10 rounded-xl bg-${c.c}-500/10 flex items-center justify-center text-${c.c}-500"><i data-lucide="${c.i}"></i></div>
-                        ${c.cfg ? `<button onclick="config('${c.id}')" class="text-gray-500 hover:text-white"><i data-lucide="settings" class="w-4 h-4"></i></button>` : ''}
+                <div class="glass p-5 rounded-[24px] flex flex-col justify-between h-44 relative group" style="animation-delay: ${i*50}ms">
+                    <div class="flex justify-between items-start z-10">
+                        <div class="w-12 h-12 rounded-2xl bg-${f.c}-500/10 flex items-center justify-center text-${f.c}-500 group-hover:scale-110 transition-transform duration-300">
+                            <i data-lucide="${f.i}" class="w-6 h-6"></i>
+                        </div>
+                        ${f.cfg ? `<button onclick="playClick(); config('${f.id}')" class="text-gray-500 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all"><i data-lucide="settings" class="w-4 h-4"></i></button>` : ''}
                     </div>
-                    <div><h4 class="font-bold text-sm">${c.t}</h4><p class="text-[10px] text-gray-500 uppercase">${c.d}</p></div>
-                    <div class="flex items-center justify-between mt-2">
-                        <span class="text-[10px] font-bold ${active?'text-purple-400':'text-gray-600'}">${active?'ON':'OFF'}</span>
-                        <label class="switch"><input type="checkbox" onchange="toggle('${c.id}', this)" ${active?'checked':''}><span class="slider"></span></label>
+                    <div class="z-10">
+                        <h4 class="font-bold text-base text-white group-hover:text-${f.c}-400 transition-colors">${f.t}</h4>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-1">${f.d}</p>
                     </div>
+                    <div class="flex items-center justify-between mt-2 z-10">
+                        <span class="text-[10px] font-black ${active ? 'text-purple-400' : 'text-gray-700'}">${active ? 'ATIVO' : 'OFF'}</span>
+                        <label class="switch">
+                            <input type="checkbox" onchange="toggle('${f.id}', this)" ${active ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-${f.c}-500/5 rounded-full blur-2xl group-hover:bg-${f.c}-500/10 transition-all duration-500"></div>
                 </div>`;
             }).join('');
             lucide.createIcons();
         }
 
         function renderMsgs(msgs) {
-            const list = document.getElementById('msg-list');
-            if(!msgs?.length) { list.innerHTML = `<div class="glass-card p-6 text-center text-sm text-gray-500">Vazio</div>`; return; }
+            const list = document.getElementById('msgs-list');
+            if(!msgs || !msgs.length) { list.innerHTML = `<div class="glass p-8 text-center text-gray-500 text-sm rounded-3xl">Nenhuma mensagem automática.</div>`; return; }
             list.innerHTML = msgs.map((m, i) => `
-                <div class="glass-card p-3 rounded-xl flex gap-3 items-center">
-                    ${m.imagemPreview ? `<img src="${m.imagemPreview}" class="w-12 h-12 rounded bg-black/50 object-cover">` : `<div class="w-12 h-12 bg-white/5 rounded flex items-center justify-center"><i data-lucide="file-text" class="text-gray-500"></i></div>`}
-                    <div class="flex-1 overflow-hidden">
-                        <p class="text-sm font-bold truncate">${m.texto || 'Imagem'}</p>
-                        <p class="text-[10px] text-gray-500">${m.tempo} min ${m.mencionarTodos ? '| @todos' : ''}</p>
+                <div class="glass p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-start md:items-center border border-white/5 hover:border-purple-500/30 transition-all">
+                    ${m.imagemPreview ? `<img src="${m.imagemPreview}" class="w-full md:w-24 h-32 md:h-20 object-cover rounded-xl bg-black/30">` : `<div class="w-full md:w-24 h-16 md:h-20 bg-white/5 rounded-xl flex items-center justify-center text-gray-600"><i data-lucide="message-square"></i></div>`}
+                    <div class="flex-1 w-full overflow-hidden">
+                        <p class="text-sm font-bold text-gray-200 line-clamp-2">${m.texto || 'Apenas Imagem'}</p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-1 rounded font-bold uppercase">${m.tempo} min</span>
+                            ${m.mencionarTodos ? '<span class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-1 rounded font-bold uppercase">@todos</span>' : ''}
+                            ${m.fixar ? '<span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-1 rounded font-bold uppercase">Fixado</span>' : ''}
+                        </div>
                     </div>
-                    <button onclick="delMsg(${i})" class="p-2 bg-red-500/10 text-red-500 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <button onclick="playClick(); delMsg(${i})" class="w-full md:w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                 </div>
             `).join('');
             lucide.createIcons();
         }
 
+        // --- AÇÕES ---
         async function toggle(func, el) {
+            playToggle();
             await post('toggle', { funcao: func, estado: el.checked ? 1 : 0 });
         }
 
         async function config(id) {
-            // 1. Welcome Config
+            playClick();
+            const cfgs = globalData.configs || {};
+            
+            // Welcome
             if(id === 'welcome') {
-                const cfg = serverData.welcomeConf || {};
+                const w = cfgs.welcome || {};
+                const imgHTML = w.imgPreview ? `<img src="${w.imgPreview}" class="w-full h-32 object-cover rounded-xl mb-4 border border-white/10">` : '';
                 const { value: form } = await Swal.fire({
-                    title: 'Boas-vindas', background: '#111', color: '#fff', confirmButtonColor: '#7c3aed',
+                    title: 'Boas-Vindas', background: '#111', color: '#fff', confirmButtonColor: '#9333ea',
                     html: `
-                        <input id="sw-img" type="file" accept="image/*" class="w-full mb-3 text-sm bg-white/5 p-2 rounded">
-                        <textarea id="sw-txt" class="w-full bg-black/30 border border-white/10 rounded p-3 text-white h-24 mb-3">${cfg.texto}</textarea>
-                        <input id="sw-link" class="w-full bg-black/30 border border-white/10 rounded p-3 text-white mb-3" placeholder="Link Botão" value="${cfg.link}">
+                        ${imgHTML}
+                        <input id="sw-img" type="file" accept="image/*" class="w-full mb-3 text-sm bg-white/5 p-2 rounded text-gray-400">
+                        <textarea id="sw-txt" class="w-full bg-black/30 border border-white/10 rounded p-3 text-white h-24 mb-3 placeholder-gray-600" placeholder="Olá #user#...">${w.texto||''}</textarea>
+                        <input id="sw-link" class="w-full bg-black/30 border border-white/10 rounded p-3 text-white mb-3 placeholder-gray-600" placeholder="Link do Botão" value="${w.link||''}">
                         <div class="flex gap-4 justify-center text-sm">
-                            <label><input type="checkbox" id="sw-btn1" ${cfg.btnLink?'checked':''}> Botão Link</label>
-                            <label><input type="checkbox" id="sw-btn2" ${cfg.btnCopy?'checked':''}> Botão Copiar</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="sw-btn1" ${w.btnLink?'checked':''} class="accent-purple-500"> Botão Link</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="sw-btn2" ${w.btnCopy?'checked':''} class="accent-purple-500"> Botão Copiar</label>
                         </div>
                     `,
-                    preConfirm: () => new Promise(resolve => {
+                    preConfirm: () => new Promise(res => {
                         const f = document.getElementById('sw-img').files[0];
-                        const d = {
-                            texto: document.getElementById('sw-txt').value,
-                            link_url: document.getElementById('sw-link').value,
-                            show_button_link: document.getElementById('sw-btn1').checked,
-                            show_button_copy: document.getElementById('sw-btn2').checked
-                        };
-                        if(f) { const r = new FileReader(); r.onload=e=>{d.imagem=e.target.result; resolve(d);}; r.readAsDataURL(f); }
-                        else resolve(d);
+                        const d = { texto: document.getElementById('sw-txt').value, link_url: document.getElementById('sw-link').value, show_button_link: document.getElementById('sw-btn1').checked, show_button_copy: document.getElementById('sw-btn2').checked };
+                        if(f){ const r=new FileReader(); r.onload=e=>{d.imagem=e.target.result; res(d);}; r.readAsDataURL(f); } else res(d);
                     })
                 });
                 if(form) await post('save_welcome_full', form);
             }
 
-            // 2. Antiflood Config
+            // Antiflood
             if(id === 'antiflood') {
-                const cfg = serverData.floodConf || { limit: 5, action: 'ban' };
+                const f = cfgs.antiflood || {limit:5, action:'ban'};
                 const { value: form } = await Swal.fire({
-                    title: 'Anti-Flood', background: '#111', color: '#fff',
+                    title: 'Anti-Flood', background: '#111', color: '#fff', confirmButtonColor: '#9333ea',
                     html: `
-                        <input id="fl-lim" type="number" value="${cfg.limit}" class="w-full bg-white/5 p-3 rounded mb-3 text-white">
+                        <label class="text-sm text-gray-400 block mb-1 text-left">Limite (msgs em 5s)</label>
+                        <input id="fl-lim" type="number" value="${f.limit}" class="w-full bg-white/5 p-3 rounded mb-4 text-white">
+                        <label class="text-sm text-gray-400 block mb-1 text-left">Punição</label>
                         <select id="fl-act" class="w-full bg-white/5 p-3 rounded text-white">
-                            <option value="ban" ${cfg.action==='ban'?'selected':''}>Banir</option>
-                            <option value="warn" ${cfg.action==='warn'?'selected':''}>Avisar</option>
+                            <option value="ban" ${f.action==='ban'?'selected':''}>Banir</option>
+                            <option value="warn" ${f.action==='warn'?'selected':''}>Avisar</option>
                         </select>
                     `,
-                    preConfirm: () => ({ limit: document.getElementById('fl-lim').value, action: document.getElementById('fl-act').value, types: {text:true, image:true} })
+                    preConfirm: () => ({ limit: document.getElementById('fl-lim').value, action: document.getElementById('fl-act').value, types: {text:true, image:true, video:true, sticker:true} })
                 });
                 if(form) await post('save_config_antiflood', form);
             }
 
-            // 3. Antimedia Config
+            // Antimídia
             if(id === 'antimedia') {
-                const am = serverData.antimedia || {};
+                const am = globalData.antimedia || {};
                 await Swal.fire({
-                    title: 'Bloquear Mídia', background: '#111', color: '#fff',
+                    title: 'Bloquear Mídia', background: '#111', color: '#fff', showConfirmButton: false,
                     html: ['image','video','audio','sticker','document'].map(t => `
-                        <div class="flex justify-between bg-white/5 p-3 rounded mb-2">
-                            <span class="capitalize">${t}</span>
-                            <input type="checkbox" onchange="toggleAM('${t}', this)" ${am[t]?'checked':''} class="accent-purple-500 w-5 h-5">
-                        </div>
-                    `).join(''),
-                    showConfirmButton: false
+                        <div class="flex justify-between items-center bg-white/5 p-3 rounded mb-2 hover:bg-white/10 transition-colors">
+                            <span class="capitalize font-bold">${t}</span>
+                            <input type="checkbox" onchange="toggleAntimedia('${t}', this)" ${am[t]?'checked':''} class="w-5 h-5 accent-purple-500">
+                        </div>`).join('')
                 });
             }
-            
-            // 4. Open/Close Config
+
+            // Open/Close e outros configs seguem o mesmo padrão...
             if(id === 'open_close') {
-                const oc = serverData.openCloseConf || { abrir: '08:00', fechar: '22:00' };
+                const oc = cfgs.open_close || {abrir:'08:00', fechar:'22:00'};
                 const { value: form } = await Swal.fire({
-                    title: 'Horários', background: '#111', color: '#fff',
-                    html: `Abrir: <input id="tm-op" type="time" value="${oc.abrir}" class="bg-white/5 p-2 rounded text-white mb-3">
-                           Fechar: <input id="tm-cl" type="time" value="${oc.fechar}" class="bg-white/5 p-2 rounded text-white">`,
+                    title: 'Horários', background: '#111', color: '#fff', confirmButtonColor: '#9333ea',
+                    html: `Abrir: <input id="tm-op" type="time" value="${oc.abrir}" class="bg-white/5 p-2 rounded text-white mb-3 ml-2"><br>
+                           Fechar: <input id="tm-cl" type="time" value="${oc.fechar}" class="bg-white/5 p-2 rounded text-white ml-2">`,
                     preConfirm: () => ({ abrir: document.getElementById('tm-op').value, fechar: document.getElementById('tm-cl').value })
                 });
                 if(form) await post('save_open_close', form);
             }
+            
+            // Antilink / Antiporno / Antifake (Ação de Ban)
+            if(['antilink','antiporno','antifake'].includes(id)) {
+                const { value: act } = await Swal.fire({
+                    title: `Ação para ${id}`, input: 'select', inputOptions: { 'ban': 'Banir', 'warn': 'Apagar' },
+                    inputValue: 'ban', background: '#111', color: '#fff', confirmButtonColor: '#9333ea'
+                });
+                if(act) await post('save_ban_action', { type: id, act });
+            }
         }
 
-        async function toggleAM(tipo, el) { await post('toggle_antimedia', { tipo, estado: el.checked?1:0 }); }
-        
         async function newMsg() {
+            playClick();
             const { value: f } = await Swal.fire({
-                title: 'Nova Mensagem', background: '#111', color: '#fff', confirmButtonColor: '#7c3aed',
-                html: `<input id="am-f" type="file" class="w-full mb-3 text-sm"><textarea id="am-t" class="w-full bg-white/5 p-2 rounded h-20 text-white mb-2"></textarea><input id="am-tm" type="number" value="30" class="w-full bg-white/5 p-2 rounded text-white">`,
+                title: 'Nova Mensagem', background: '#111', color: '#fff', confirmButtonColor: '#9333ea',
+                html: `
+                    <input id="am-f" type="file" accept="image/*" class="w-full bg-white/5 p-2 rounded mb-3 text-sm text-gray-400">
+                    <textarea id="am-t" class="w-full bg-black/30 border border-white/10 rounded p-3 text-white h-24 mb-3 placeholder-gray-600" placeholder="Texto..."></textarea>
+                    <div class="flex gap-2 mb-3"><input id="am-tm" type="number" value="30" class="w-20 bg-white/5 p-2 rounded text-white text-center"><span class="self-center text-sm text-gray-400">minutos</span></div>
+                    <div class="flex gap-4 justify-center text-sm"><label><input type="checkbox" id="am-all" class="accent-purple-500"> @todos</label><label><input type="checkbox" id="am-pin" class="accent-purple-500"> Fixar</label></div>
+                `,
                 preConfirm: () => new Promise(res => {
                     const file = document.getElementById('am-f').files[0];
-                    const d = { texto: document.getElementById('am-t').value, tempo: document.getElementById('am-tm').value, mencionarTodos: true, fixar: false, imagem: null };
-                    if(file) { const r = new FileReader(); r.onload=e=>{d.imagem=e.target.result; res(d);}; r.readAsDataURL(file); } else res(d);
+                    const d = { texto: document.getElementById('am-t').value, tempo: document.getElementById('am-tm').value, mencionarTodos: document.getElementById('am-all').checked, fixar: document.getElementById('am-pin').checked, imagem: null };
+                    if(file) { const r=new FileReader(); r.onload=e=>{d.imagem=e.target.result; res(d);}; r.readAsDataURL(file); } else res(d);
                 })
             });
-            if(f) { await post('add_automsg', { msg: f }); init(); }
+            if(f) await post('add_automsg', { msg: f });
         }
 
-        async function delMsg(idx) { await post('del_automsg', { index: idx }); init(); }
+        async function modalRenovar() {
+            playClick();
+            const { value: dias } = await Swal.fire({
+                title: 'Renovar Plano', background: '#111', color: '#fff', showConfirmButton: false,
+                html: `
+                    <div class="grid grid-cols-2 gap-3 mt-2">
+                        <button onclick="simulaPix(1)" class="bg-white/5 hover:bg-purple-600 border border-white/10 p-4 rounded-xl transition-all group">
+                            <div class="font-bold text-white text-lg">1 Dia</div><div class="text-xs text-gray-400 group-hover:text-white">R$ 5,00</div>
+                        </button>
+                        <button onclick="simulaPix(30)" class="bg-white/5 hover:bg-purple-600 border border-white/10 p-4 rounded-xl transition-all group">
+                            <div class="font-bold text-white text-lg">30 Dias</div><div class="text-xs text-gray-400 group-hover:text-white">R$ 40,00</div>
+                        </button>
+                    </div>
+                `
+            });
+        }
 
+        async function simulaPix(dias) {
+            Swal.fire({ title: 'Gerando PIX...', timer: 1500, timerProgressBar: true, didOpen: ()=>Swal.showLoading(), background:'#111', color:'#fff' })
+            .then(async () => {
+                await fetch(API, { method: 'POST', body: JSON.stringify({ acao: 'verificar_pix', id: user.id, dias: dias, payment_id: 'mock' }) });
+                Swal.fire({ icon:'success', title:'Pagamento Aprovado!', text:`+${dias} dias adicionados.`, background:'#111', color:'#fff', confirmButtonColor:'#9333ea' }).then(()=>init());
+            });
+        }
+
+        async function modalPerfil() {
+            playClick();
+            const { value: f } = await Swal.fire({
+                title: 'Perfil', background: '#111', color: '#fff', confirmButtonColor: '#9333ea',
+                html: `
+                    <input id="pf-nm" class="w-full bg-white/5 p-3 rounded mb-3 text-white" value="${document.getElementById('gp-name').innerText}" placeholder="Nome">
+                    <input id="pf-pw" class="w-full bg-white/5 p-3 rounded text-white" placeholder="Nova Senha">
+                `,
+                preConfirm: () => ({ nome: document.getElementById('pf-nm').value, senha: document.getElementById('pf-pw').value })
+            });
+            if(f) {
+                if(f.nome) await post('save_group_name', { nome: f.nome });
+                if(f.senha) await post('alterar_senha', { nova_senha: f.senha });
+            }
+        }
+
+        // Helpers
+        async function toggleAntimedia(tipo, el) { await post('toggle_antimedia', { tipo, estado: el.checked?1:0 }); }
+        async function delMsg(idx) { await post('del_automsg', { index: idx }); }
+        
         async function post(acao, data) {
-            await fetch(API, { method: 'POST', body: JSON.stringify({ acao, id: user.id, ...data }) });
-            init(); // Recarrega para confirmar visualmente
+            try {
+                await fetch(API, { method: 'POST', body: JSON.stringify({ acao, id: user.id, ...data }) });
+                init();
+            } catch(e) { Swal.fire('Erro', 'Falha na conexão', 'error'); }
         }
 
-        function toggleMenu() { 
-            const sb = document.getElementById('sidebar'); 
-            const ov = document.getElementById('overlay');
-            sb.classList.toggle('-translate-x-full');
-            ov.classList.toggle('hidden');
+        // UI
+        let isPlayingAudio = false;
+        function toggleAudio() {
+            const aud = document.getElementById('bg-audio');
+            const btn = document.getElementById('btn-play');
+            if(isPlayingAudio) { aud.pause(); btn.innerText="Tocar Música"; btn.classList.replace('bg-red-500','bg-purple-600'); }
+            else { aud.play(); btn.innerText="Pausar"; btn.classList.replace('bg-purple-600','bg-red-500'); }
+            isPlayingAudio = !isPlayingAudio;
         }
-        function showSection(id) {
-            document.getElementById('sec-dashboard').classList.toggle('hidden', id !== 'dashboard');
-            document.getElementById('sec-automsg').classList.toggle('hidden', id !== 'automsg');
-            document.getElementById('sidebar').classList.add('-translate-x-full');
-            document.getElementById('overlay').classList.add('hidden');
+
+        function toggleMenu() {
+            playClick();
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('overlay').classList.toggle('hidden');
         }
-        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+        function nav(id) {
+            playClick();
+            document.getElementById('view-dashboard').classList.toggle('hidden', id !== 'dashboard');
+            document.getElementById('view-automsg').classList.toggle('hidden', id !== 'automsg');
+            if(window.innerWidth < 768) toggleMenu();
+        }
+        function logout() { localStorage.removeItem('nekotina_session'); window.location.href = 'index.html'; }
+        
+        function startTimer(exp) {
+            setInterval(() => {
+                const d = exp - Date.now();
+                document.getElementById('timer').innerText = d > 0 ? `${Math.floor(d/86400000)}d ${Math.floor((d%86400000)/3600000)}h ${Math.floor((d%3600000)/60000)}m` : "EXPIRADO";
+            }, 1000);
+        }
 
         window.onload = init;
     </script>
