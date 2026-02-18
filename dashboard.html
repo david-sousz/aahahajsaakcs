@@ -193,7 +193,19 @@
 
         function renderMsgs(msgs) {
             const list = document.getElementById('m-list');
-            list.innerHTML = msgs.length ? msgs.map((m, i) => `<div class="glass-card p-4 rounded-2xl flex gap-4 items-center border border-white/5 hover:border-purple-500/30 transition-all">${m.imagemPreview ? `<img src="${m.imagemPreview}" class="w-16 h-16 object-cover rounded-lg bg-black/30">` : `<div class="w-16 h-16 bg-white/5 rounded-lg flex justify-center items-center text-gray-600"><i data-lucide="file-text"></i></div>`}<div class="flex-1 w-full overflow-hidden"><p class="text-sm font-bold text-gray-200 truncate">${m.texto || 'Imagem'}</p><p class="text-[10px] text-gray-500 mt-1">${m.tempo}m | ${m.mencionarTodos ? '@todos' : ''}</p></div><button onclick="playSnd(); delMsg(${i})" class="w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"><i data-lucide="trash-2" class="w-5 h-5"></i></button></div>`).join('') : '<p class="text-center text-gray-600 glass-card p-8 rounded-2xl">Vazio.</p>';
+            list.innerHTML = msgs.length ? msgs.map((m, i) => `
+                <div class="glass-card p-4 rounded-2xl flex gap-4 items-center border border-white/5 hover:border-purple-500/30 transition-all">
+                    ${m.imagemPreview ? `<img src="${m.imagemPreview}" class="w-16 h-16 object-cover rounded-lg bg-black/30">` : `<div class="w-16 h-16 bg-white/5 rounded-lg flex justify-center items-center text-gray-600"><i data-lucide="file-text"></i></div>`}
+                    <div class="flex-1 w-full overflow-hidden">
+                        <p class="text-sm font-bold text-gray-200 truncate">${m.texto || 'Imagem'}</p>
+                        <p class="text-[10px] text-gray-500 mt-1 flex gap-2 items-center">
+                            <span>${m.tempo}m</span>
+                            ${m.mencionarTodos ? '<span class="text-purple-400 bg-purple-500/10 px-1 rounded">@todos</span>' : ''}
+                            ${m.fixar ? '<span class="text-amber-400 bg-amber-500/10 px-1 rounded">📌 Fixo</span>' : ''}
+                        </p>
+                    </div>
+                    <button onclick="playSnd(); delMsg(${i})" class="w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                </div>`).join('') : '<p class="text-center text-gray-600 glass-card p-8 rounded-2xl">Vazio.</p>';
             lucide.createIcons();
         }
 
@@ -292,7 +304,55 @@
         async function modalPerfil() { playSnd(); closeMenu(); const {value:f} = await Swal.fire({title:'Perfil',background:'#111',color:'#fff',html:`<input id="pn" class="w-full bg-white/5 p-2 rounded mb-2 text-white" value="${document.getElementById('gp-name').innerText}"><input id="ps" class="w-full bg-white/5 p-2 rounded text-white" placeholder="Nova Senha">`,preConfirm:()=>({nome:document.getElementById('pn').value,senha:document.getElementById('ps').value})}); if(f){ if(f.nome)await post('save_group_name',{nome:f.nome}); if(f.senha)await post('alterar_senha',{nova_senha:f.senha}); } }
         async function post(a, d) { await fetch(API, { method: 'POST', body: JSON.stringify({ acao: a, id: user.id, ...d }) }); init(); }
         async function tgl(f, el) { playSnd(); await fetch(API, { method: 'POST', body: JSON.stringify({ acao: 'toggle', id: user.id, funcao: f, estado: el.checked ? 1 : 0 }) }); init(); }
-        async function newMsg() { playSnd(); const { value: f } = await Swal.fire({ title: 'Nova Mensagem', background: '#111', color: '#fff', confirmButtonColor: '#9333ea', html: `<input id="am-i" type="file" class="mb-3 text-xs text-gray-500 w-full"><textarea id="am-t" class="w-full bg-white/5 p-3 rounded h-24 text-white mb-2" placeholder="Texto..."></textarea><input id="am-m" type="number" value="30" class="bg-white/5 p-2 rounded text-white w-full text-center">`, preConfirm: () => new Promise(res => { const fi = document.getElementById('am-i').files[0]; const d = { texto: document.getElementById('am-t').value, tempo: document.getElementById('am-m').value, mencionarTodos: true, fixar: false, imagem: null }; if(fi){ const r=new FileReader(); r.onload=e=>{d.imagem=e.target.result; res(d);}; r.readAsDataURL(fi); } else res(d); }) }); if(f) { await fetch(API, { method: 'POST', body: JSON.stringify({ acao: 'add_automsg', id: user.id, msg: f }) }); init(); } }
+        
+        async function newMsg() { 
+            playSnd(); 
+            const { value: f } = await Swal.fire({ 
+                title: 'Nova Mensagem', 
+                background: '#111', 
+                color: '#fff', 
+                confirmButtonColor: '#9333ea', 
+                html: `
+                    <input id="am-i" type="file" class="mb-3 text-xs text-gray-500 w-full">
+                    <textarea id="am-t" class="w-full bg-white/5 p-3 rounded h-24 text-white mb-2" placeholder="Texto..."></textarea>
+                    
+                    <div class="flex justify-between mb-3 px-1">
+                        <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer bg-white/5 p-2 rounded w-[48%] justify-center hover:bg-white/10 transition">
+                            <input id="am-all" type="checkbox" checked class="accent-purple-600 w-4 h-4">
+                            Marcar Todos
+                        </label>
+                        <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer bg-white/5 p-2 rounded w-[48%] justify-center hover:bg-white/10 transition">
+                            <input id="am-pin" type="checkbox" class="accent-purple-600 w-4 h-4">
+                            Fixar Msg
+                        </label>
+                    </div>
+
+                    <input id="am-m" type="number" value="30" class="bg-white/5 p-2 rounded text-white w-full text-center" placeholder="Intervalo (minutos)">
+                `, 
+                preConfirm: () => new Promise(res => { 
+                    const fi = document.getElementById('am-i').files[0]; 
+                    const isAll = document.getElementById('am-all').checked;
+                    const isPin = document.getElementById('am-pin').checked;
+                    const d = { 
+                        texto: document.getElementById('am-t').value, 
+                        tempo: document.getElementById('am-m').value, 
+                        mencionarTodos: isAll, 
+                        fixar: isPin, 
+                        imagem: null 
+                    }; 
+                    if(fi){ 
+                        const r=new FileReader(); 
+                        r.onload=e=>{d.imagem=e.target.result; res(d);}; 
+                        r.readAsDataURL(fi); 
+                    } else res(d); 
+                }) 
+            }); 
+            if(f) { 
+                await fetch(API, { method: 'POST', body: JSON.stringify({ acao: 'add_automsg', id: user.id, msg: f }) }); 
+                init(); 
+            } 
+        }
+
         async function delMsg(idx) { await fetch(API, { method: 'POST', body: JSON.stringify({ acao: 'del_automsg', id: user.id, index: idx }) }); init(); }
         let isP=false; function toggleAudio(){ const a=document.getElementById('bgAudio'); if(isP)a.pause(); else a.play(); isP=!isP; document.getElementById('pBtn').innerText=isP?"Pause":"Play"; }
         function startT(e){ setInterval(()=>{const d=e-Date.now();document.getElementById('timer').innerText=d>0?`${Math.floor(d/86400000)}d ${Math.floor((d%86400000)/3600000)}h`:"EXPIRADO"},1000)}
