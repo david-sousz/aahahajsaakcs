@@ -89,7 +89,6 @@
             <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg"><i data-lucide="cat" class="text-white w-6 h-6"></i></div>
             <span class="font-extrabold text-xl font-[Fredoka]">Nekotina</span>
         </div>
-        <!-- BOTÃO MENU CORRIGIDO -->
         <button onclick="toggleMenu()" class="p-3 bg-white/10 rounded-xl text-white active:scale-95 transition-transform">
             <i data-lucide="menu" class="w-7 h-7"></i>
         </button>
@@ -164,7 +163,6 @@
 
         async function init() {
             try {
-                // Remove classe hidden se for Desktop
                 if(window.innerWidth > 768) document.getElementById('sidebar').classList.remove('hidden');
 
                 const res = await fetch(API, { method: 'POST', body: JSON.stringify({ acao: 'get_config', id: user.id }) });
@@ -209,15 +207,11 @@
             lucide.createIcons();
         }
 
-        // --- FUNÇÕES MENU MOBILE CORRIGIDAS ---
         function toggleMenu() {
             playSnd();
             const sb = document.getElementById('sidebar');
             const ov = document.getElementById('overlay');
-            
-            // Remove a classe hidden se foi adicionada manualmente
             sb.classList.remove('hidden');
-
             if (sb.classList.contains('active')) {
                 sb.classList.remove('active');
                 ov.classList.remove('active');
@@ -239,7 +233,6 @@
             closeMenu();
         }
 
-        // --- CONFIGS E MODAIS (COM FECHAMENTO DE MENU) ---
         async function config(id) {
             playSnd();
             closeMenu();
@@ -254,8 +247,52 @@
             if(id==='welcome'){
                 const w = cfg.welcome || {};
                 const imgHTML = w.imgPreview ? `<img src="${w.imgPreview}" class="w-full h-32 object-cover rounded-xl mb-4 border border-white/10">` : '';
-                const {value:f}=await Swal.fire({title:'Boas Vindas',background:'#111',color:'#fff',html:`${imgHTML}<input id="w-i" type="file" class="w-full mb-2 text-xs text-gray-400 bg-white/5 p-2 rounded"><textarea id="w-t" class="w-full bg-white/5 p-2 rounded h-24 text-white mb-2" placeholder="Texto...">${w.texto||''}</textarea><input id="w-l" value="${w.link||''}" class="w-full bg-white/5 p-2 rounded text-white" placeholder="Link Botão">`,preConfirm:()=>({texto:document.getElementById('w-t').value, link_url:document.getElementById('w-l').value})});
-                if(f)await post('save_welcome_full', f);
+                
+                const {value:f} = await Swal.fire({
+                    title: 'Boas Vindas',
+                    background: '#111',
+                    color: '#fff',
+                    html: `
+                        ${imgHTML}
+                        <input id="w-i" type="file" class="w-full mb-2 text-xs text-gray-400 bg-white/5 p-2 rounded">
+                        <textarea id="w-t" class="w-full bg-white/5 p-2 rounded h-24 text-white mb-2" placeholder="Texto...">${w.texto||''}</textarea>
+                        
+                        <div class="flex gap-2 mb-2">
+                             <label class="flex items-center gap-2 text-[10px] bg-white/5 p-2 rounded w-1/2 cursor-pointer">
+                                <input type="checkbox" id="w-chk-link" ${w.btnLink?'checked':''} class="accent-purple-600"> Botão Link
+                             </label>
+                             <label class="flex items-center gap-2 text-[10px] bg-white/5 p-2 rounded w-1/2 cursor-pointer">
+                                <input type="checkbox" id="w-chk-copy" ${w.btnCopy?'checked':''} class="accent-purple-600"> Botão Copiar
+                             </label>
+                        </div>
+
+                        <input id="w-l" value="${w.link||''}" class="w-full bg-white/5 p-2 rounded text-white" placeholder="URL do Link (https://...)">
+                    `,
+                    preConfirm: () => {
+                        const fileInput = document.getElementById('w-i').files[0];
+                        const dados = {
+                            texto: document.getElementById('w-t').value,
+                            link_url: document.getElementById('w-l').value,
+                            show_button_link: document.getElementById('w-chk-link').checked,
+                            show_button_copy: document.getElementById('w-chk-copy').checked,
+                            imagem: null
+                        };
+
+                        if(fileInput) {
+                            return new Promise((resolve) => {
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    dados.imagem = e.target.result;
+                                    resolve(dados);
+                                };
+                                reader.readAsDataURL(fileInput);
+                            });
+                        }
+                        return dados;
+                    }
+                });
+
+                if(f) await post('save_welcome_full', f);
             }
             if(id==='antiflood'){
                 const f = cfg.antiflood || {limit:5, action:'ban'};
