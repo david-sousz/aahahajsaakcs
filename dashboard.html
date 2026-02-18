@@ -299,10 +299,6 @@
                 const {value:form}=await Swal.fire({title:'Antiflood',background:'#111',color:'#fff',html:`<input id="af-l" type="number" value="${f.limit}" class="bg-white/5 p-2 rounded text-white mb-2" placeholder="Limite"><select id="af-a" class="bg-white/5 p-2 rounded w-full text-white"><option value="ban" ${f.action=='ban'?'selected':''}>Banir</option><option value="warn" ${f.action=='warn'?'selected':''}>Avisar</option></select>`,preConfirm:()=>({limit:document.getElementById('af-l').value, action:document.getElementById('af-a').value})});
                 if(form)await post('save_config_antiflood', {...form, types:{text:true}});
             }
-            if(id==='antimedia'){
-                const am = globalData.antimedia;
-                await Swal.fire({title:'Mídia',background:'#111',color:'#fff',showConfirmButton:false,html:['image','video','audio','sticker'].map(t=>`<div class="flex justify-between bg-white/5 p-2 rounded mb-1 items-center"><span class="capitalize">${t}</span><input type="checkbox" onchange="post('toggle_antimedia',{tipo:'${t}',estado:this.checked?1:0})" ${am[t]?'checked':''} class="w-5 h-5 accent-purple-600"></div>`).join('')});
-            }
             if(id==='open_close'){
                 const oc = cfg.open_close || {abrir:'08:00', fechar:'22:00'};
                 const {value:f}=await Swal.fire({title:'Horários',background:'#111',color:'#fff',html:`Abrir: <input id="op" type="time" value="${oc.abrir}" class="bg-white/5 p-2 rounded text-white mb-2 w-full text-center"> Fechar: <input id="cl" type="time" value="${oc.fechar}" class="bg-white/5 p-2 rounded text-white w-full text-center">`,preConfirm:()=>({abrir:document.getElementById('op').value, fechar:document.getElementById('cl').value})});
