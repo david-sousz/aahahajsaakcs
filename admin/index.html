@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nekotina Admin · Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+</head>
+<body class="min-h-screen flex items-center justify-center p-5">
+  <div class="grid-noise"></div>
+
+  <main class="app-shell">
+    <section class="hero-panel overflow-hidden p-0 max-w-5xl mx-auto scale-in">
+      <div class="grid lg:grid-cols-[1.15fr_.85fr] gap-0">
+        <div class="p-8 md:p-12 lg:p-14 border-b lg:border-b-0 lg:border-r border-white/6">
+          <span class="brand-chip"><i data-lucide="shield-check"></i>Controle administrativo</span>
+          <h1 class="section-title mt-6 text-[clamp(2.2rem,4vw,4rem)]">Área reservada para aprovações, gestão de grupos e fila operacional.</h1>
+          <p class="section-subtitle mt-5 max-w-2xl">Faça o login para acessar o painel administrativo com métricas, pedidos pendentes e edição completa dos grupos ativos.</p>
+
+          <div class="grid sm:grid-cols-2 gap-4 mt-8">
+            <div class="metric-card p-5">
+              <div class="metric-label">Pedidos</div>
+              <div class="metric-value mt-3">Pendentes</div>
+              <div class="metric-note mt-3">Aprovação com um clique para enviar a fila do bot.</div>
+            </div>
+            <div class="metric-card p-5">
+              <div class="metric-label">Grupos</div>
+              <div class="metric-value mt-3">Gestão</div>
+              <div class="metric-note mt-3">Editar validade, senha, nome e plano em uma central só.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-8 md:p-10 lg:p-12 bg-white/[0.02]">
+          <div class="w-16 h-16 rounded-3xl bg-gradient-to-br from-rose-500 to-violet-500 flex items-center justify-center shadow-2xl shadow-rose-500/25">
+            <i data-lucide="shield-ellipsis" class="w-8 h-8 text-white"></i>
+          </div>
+          <h2 class="text-3xl font-black tracking-tight mt-6">Painel admin</h2>
+          <p class="text-slate-400 mt-3">Entre com as credenciais do administrador para liberar o painel premium.</p>
+
+          <div class="mt-8 space-y-4">
+            <div>
+              <label class="label-top">Usuário</label>
+              <div class="input-shell">
+                <i data-lucide="user-round" class="w-5 h-5 text-slate-500"></i>
+                <input id="admin-user" placeholder="Seu usuário">
+              </div>
+            </div>
+            <div>
+              <label class="label-top">Senha</label>
+              <div class="input-shell">
+                <i data-lucide="key-round" class="w-5 h-5 text-slate-500"></i>
+                <input id="admin-pass" type="password" placeholder="Sua senha">
+              </div>
+            </div>
+            <button id="admin-login-button" class="btn-primary w-full"><i data-lucide="arrow-right"></i>Entrar no painel</button>
+          </div>
+
+          <div class="divider-soft my-8"></div>
+          <a href="/" class="btn-ghost w-full"><i data-lucide="corner-up-left"></i>Voltar para a página inicial</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/assets/js/common.js"></script>
+  <script src="/assets/js/admin-login.js"></script>
+</body>
+</html>
