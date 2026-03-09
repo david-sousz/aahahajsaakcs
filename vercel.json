@@ -1,0 +1,9 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": true,
+  "rewrites": [
+    { "source": "/admin.html", "destination": "/admin/" },
+    { "source": "/dashboard.html", "destination": "/dashboard/" },
+    { "source": "/painel-admin.html", "destination": "/painel-admin/" }
+  ]
+}

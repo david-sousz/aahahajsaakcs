@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nekotina · Login e contratação</title>
+  <meta name="description" content="Painel premium da Nekotina para login de grupos e contratação do bot via PIX.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+</head>
+<body>
+  <div class="grid-noise"></div>
+
+  <header class="topbar-blur">
+    <div class="app-shell flex items-center justify-between py-4 gap-4">
+      <a href="/" class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center shadow-2xl shadow-violet-500/30">
+          <i data-lucide="sparkles" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+          <div class="text-lg font-black tracking-tight" style="font-family: Fredoka, sans-serif;">Nekotina</div>
+          <div class="text-xs text-slate-400 uppercase tracking-[0.24em] font-bold">Premium control</div>
+        </div>
+      </a>
+
+      <div class="hidden md:flex items-center gap-3">
+        <span class="brand-chip"><i data-lucide="shield-check"></i>Operação estável</span>
+        <a class="btn-ghost" href="/admin/"><i data-lucide="shield"></i>Área admin</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell py-10 md:py-14">
+    <section class="hero-panel p-6 md:p-10 lg:p-12 shine fade-up overflow-hidden">
+      <div class="grid lg:grid-cols-[1.1fr_.9fr] gap-8 lg:gap-12 items-start">
+        <div class="space-y-6">
+          <span class="brand-chip"><i data-lucide="zap"></i>Visual premium · fluxo comercial integrado</span>
+          <div>
+            <h1 class="section-title text-[clamp(2.4rem,5vw,4.8rem)] max-w-4xl">Site elegante, rápido e pronto para login de clientes e contratação via PIX.</h1>
+            <p class="section-subtitle mt-5 max-w-2xl text-base md:text-lg">Uma experiência mais sofisticada para quem já tem grupo ativo e também para quem vai contratar o bot pela internet, enviando nome, contato, link do grupo e período desejado.</p>
+          </div>
+
+          <div class="grid sm:grid-cols-3 gap-4">
+            <div class="metric-card p-5">
+              <div class="metric-label">Fluxo comercial</div>
+              <div class="metric-value mt-3">PIX</div>
+              <div class="metric-note mt-3">Compra guiada com resumo e verificação automática.</div>
+            </div>
+            <div class="metric-card p-5">
+              <div class="metric-label">Entrega</div>
+              <div class="metric-value mt-3">Admin</div>
+              <div class="metric-note mt-3">Pedidos ficam organizados para aprovação.</div>
+            </div>
+            <div class="metric-card p-5">
+              <div class="metric-label">Experiência</div>
+              <div class="metric-value mt-3">Premium</div>
+              <div class="metric-note mt-3">Motion design leve, interface limpa e responsiva.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-panel p-4 md:p-5 lg:p-6">
+          <div class="grid md:grid-cols-2 gap-4 md:gap-5">
+            <article class="neo-card p-5 md:p-6">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <div class="card-icon"><i data-lucide="log-in"></i></div>
+                  <h2 class="text-xl font-extrabold mt-4">Entrar no painel</h2>
+                  <p class="text-sm text-slate-400 mt-2">Acesse o dashboard do seu grupo com segurança.</p>
+                </div>
+                <span class="status-chip primary">Cliente</span>
+              </div>
+
+              <div class="mt-6 space-y-4">
+                <div>
+                  <label class="label-top">Grupo cadastrado</label>
+                  <div class="select-shell">
+                    <i data-lucide="users" class="w-5 h-5 text-slate-500"></i>
+                    <select id="group-select">
+                      <option value="" selected disabled>Carregando grupos...</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label class="label-top">Senha de acesso</label>
+                  <div class="input-shell">
+                    <i data-lucide="lock-keyhole" class="w-5 h-5 text-slate-500"></i>
+                    <input type="password" id="group-pass" placeholder="Digite sua senha">
+                  </div>
+                </div>
+                <div class="glass-panel p-4 flex items-center justify-between gap-4">
+                  <div>
+                    <div class="text-xs uppercase tracking-[0.2em] font-bold text-slate-400">Validação rápida</div>
+                    <div class="text-lg font-black mt-2"><span id="captcha-text"></span> = ?</div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="input-shell !py-3 !px-4 w-[90px]"><input type="number" id="captcha-answer" placeholder="Resp."></div>
+                    <button type="button" id="reload-captcha" class="btn-ghost !py-3 !px-4"><i data-lucide="refresh-ccw"></i></button>
+                  </div>
+                </div>
+                <button id="login-button" class="btn-primary w-full"><i data-lucide="arrow-right"></i>Acessar dashboard</button>
+              </div>
+            </article>
+
+            <article class="neo-card p-5 md:p-6">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <div class="card-icon"><i data-lucide="badge-dollar-sign"></i></div>
+                  <h2 class="text-xl font-extrabold mt-4">Contratar via PIX</h2>
+                  <p class="text-sm text-slate-400 mt-2">Cadastre o pedido do grupo com tudo o que o admin precisa aprovar.</p>
+                </div>
+                <span class="status-chip success">Aluguel</span>
+              </div>
+
+              <form id="purchase-form" class="mt-6 space-y-4" onsubmit="return false;">
+                <div>
+                  <label class="label-top">Nome do responsável</label>
+                  <div class="input-shell">
+                    <i data-lucide="user-round" class="w-5 h-5 text-slate-500"></i>
+                    <input id="buyer-name" placeholder="Nome completo">
+                  </div>
+                </div>
+                <div>
+                  <label class="label-top">Número / contato</label>
+                  <div class="input-shell">
+                    <i data-lucide="phone" class="w-5 h-5 text-slate-500"></i>
+                    <input id="buyer-number" placeholder="5585...">
+                  </div>
+                </div>
+                <div>
+                  <label class="label-top">Link do grupo</label>
+                  <div class="input-shell">
+                    <i data-lucide="link-2" class="w-5 h-5 text-slate-500"></i>
+                    <input id="buyer-link" placeholder="https://chat.whatsapp.com/...">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="label-top">Tempo de aluguel</label>
+                  <div id="plan-grid" class="grid grid-cols-2 gap-3"></div>
+                </div>
+
+                <div class="glass-panel p-4">
+                  <div class="flex items-center justify-between gap-3 text-sm">
+                    <div>
+                      <div class="text-slate-400 uppercase tracking-[0.18em] font-bold text-[11px]">Resumo do pedido</div>
+                      <div class="font-extrabold mt-2" id="summary-plan">30 dias</div>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-slate-400 uppercase tracking-[0.18em] font-bold text-[11px]">Valor</div>
+                      <div class="font-extrabold mt-2" id="summary-price">R$ 40,00</div>
+                    </div>
+                  </div>
+                  <div class="divider-soft my-4"></div>
+                  <div class="text-sm text-slate-400">Período equivalente: <span class="text-white font-bold" id="summary-period">30d 0h</span></div>
+                </div>
+
+                <button id="purchase-button" class="btn-primary w-full"><i data-lucide="qr-code"></i>Gerar PIX</button>
+              </form>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid lg:grid-cols-3 gap-6 mt-8">
+      <article class="glass-panel p-6">
+        <div class="card-icon"><i data-lucide="shield"></i></div>
+        <h3 class="text-xl font-extrabold mt-4">Login seguro</h3>
+        <p class="text-sm text-slate-400 mt-2">Entrada por grupo, senha e validação simples para reduzir acessos indevidos.</p>
+      </article>
+      <article class="glass-panel p-6">
+        <div class="card-icon"><i data-lucide="wallet"></i></div>
+        <h3 class="text-xl font-extrabold mt-4">PIX com rastreio</h3>
+        <p class="text-sm text-slate-400 mt-2">Toda compra gera registro pendente com nome, número, link do grupo e tempo escolhido.</p>
+      </article>
+      <article class="glass-panel p-6">
+        <div class="card-icon"><i data-lucide="layout-dashboard"></i></div>
+        <h3 class="text-xl font-extrabold mt-4">Painel refinado</h3>
+        <p class="text-sm text-slate-400 mt-2">Interface moderna para cliente e área administrativa com visual mais premium.</p>
+      </article>
+    </section>
+  </main>
+
+  <a href="https://wa.me/5585992374198" target="_blank" class="floating-help btn-success"><i data-lucide="message-circle-more"></i>Suporte</a>
+
+  <script src="/assets/js/common.js"></script>
+  <script src="/assets/js/index.js"></script>
+</body>
+</html>
