@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nekotina Admin · Painel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+</head>
+<body>
+  <div class="grid-noise"></div>
+
+  <header class="topbar-blur">
+    <div class="app-shell py-4 flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-3xl bg-gradient-to-br from-rose-500 to-fuchsia-500 flex items-center justify-center shadow-2xl shadow-rose-500/25">
+          <i data-lucide="shield-check" class="w-7 h-7 text-white"></i>
+        </div>
+        <div>
+          <div class="text-sm text-slate-400 uppercase tracking-[0.25em] font-bold">Nekotina Admin</div>
+          <div class="text-2xl font-black tracking-tight" style="font-family: Fredoka, sans-serif;">Central operacional premium</div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <button class="btn-secondary" id="refresh-admin"><i data-lucide="refresh-ccw"></i>Atualizar</button>
+        <button class="btn-danger" id="logout-admin"><i data-lucide="log-out"></i>Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell py-8 md:py-10 space-y-8">
+    <section class="grid md:grid-cols-2 xl:grid-cols-5 gap-4">
+      <article class="metric-card p-5"><div class="metric-label">Grupos</div><div class="metric-value mt-3" id="metric-total">0</div><div class="metric-note mt-3">Total monitorado no painel.</div></article>
+      <article class="metric-card p-5"><div class="metric-label">Ativos</div><div class="metric-value mt-3" id="metric-active">0</div><div class="metric-note mt-3">Com acesso válido no momento.</div></article>
+      <article class="metric-card p-5"><div class="metric-label">Expirados</div><div class="metric-value mt-3" id="metric-expired">0</div><div class="metric-note mt-3">Precisam de renovação.</div></article>
+      <article class="metric-card p-5"><div class="metric-label">Pendências</div><div class="metric-value mt-3" id="metric-pending">0</div><div class="metric-note mt-3">Compras aguardando ação do admin.</div></article>
+      <article class="metric-card p-5"><div class="metric-label">Pagos</div><div class="metric-value mt-3" id="metric-paid-pending">0</div><div class="metric-note mt-3">Pendências já confirmadas.</div></article>
+    </section>
+
+    <section id="overview-summary"></section>
+
+    <section class="glass-panel p-3 md:p-4">
+      <div class="flex flex-wrap gap-3">
+        <button class="nav-pill active" data-admin-tab="overview"><i data-lucide="layout-dashboard"></i>Visão geral</button>
+        <button class="nav-pill" data-admin-tab="pending"><i data-lucide="hourglass"></i>Novos pendentes</button>
+        <button class="nav-pill" data-admin-tab="groups"><i data-lucide="users"></i>Grupos cadastrados</button>
+      </div>
+    </section>
+
+    <section data-admin-view="overview" class="space-y-6">
+      <div class="glass-panel p-6">
+        <h2 class="text-2xl font-extrabold">Resumo operacional</h2>
+        <p class="section-subtitle mt-2">Use as abas acima para aprovar novos pedidos ou gerenciar grupos existentes. A visão geral foi pensada para destacar o que precisa de ação rápida.</p>
+      </div>
+    </section>
+
+    <section data-admin-view="pending" class="hidden space-y-6">
+      <div class="glass-panel p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-extrabold">Fila de aprovação</h2>
+            <p class="section-subtitle mt-2">Ao aprovar, o pedido sai de <span class="kbd">novos-pendente.json</span> e entra em <span class="kbd">lib\\novo-grupo.json</span>.</p>
+          </div>
+          <div class="input-shell max-w-md w-full">
+            <i data-lucide="search" class="w-5 h-5 text-slate-500"></i>
+            <input id="pending-search" placeholder="Buscar por nome, telefone, link ou payment_id">
+          </div>
+        </div>
+      </div>
+      <div id="pending-list" class="space-y-4"></div>
+    </section>
+
+    <section data-admin-view="groups" class="hidden space-y-6">
+      <div class="glass-panel p-6">
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-extrabold">Gestão de grupos</h2>
+            <p class="section-subtitle mt-2">Editar nome, senha, validade e plano de forma rápida.</p>
+          </div>
+          <div class="flex flex-col md:flex-row gap-3 w-full xl:w-auto xl:min-w-[620px]">
+            <div class="input-shell flex-1 min-w-[280px]">
+              <i data-lucide="search" class="w-5 h-5 text-slate-500"></i>
+              <input id="group-search" placeholder="Buscar por nome, id, plano ou senha">
+            </div>
+            <button class="btn-primary" id="add-group-button"><i data-lucide="plus"></i>Novo grupo</button>
+            <button class="btn-danger" id="delete-group-button"><i data-lucide="trash-2"></i>Excluir</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-shell overflow-x-auto">
+        <table class="data-table min-w-[940px]">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="group-check-all"></th>
+              <th>Grupo / ID</th>
+              <th>Senha</th>
+              <th>Status</th>
+              <th>Validade</th>
+              <th>Plano</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="group-table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="glass-panel p-5 flex items-center justify-between gap-4">
+        <div class="text-slate-400 text-sm">Resultados carregados</div>
+        <div class="status-chip primary"><span id="group-count">0</span>&nbsp;grupo(s)</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/assets/js/common.js"></script>
+  <script src="/assets/js/admin-panel.js"></script>
+</body>
+</html>
