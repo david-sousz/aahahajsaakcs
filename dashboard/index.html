@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nekotina · Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css?v=20260308b">
+</head>
+<body>
+  <div class="grid-noise"></div>
+
+  <header class="topbar-blur">
+    <div class="app-shell py-4 flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-3xl bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center shadow-2xl shadow-violet-500/25">
+          <i data-lucide="sparkles" class="w-7 h-7 text-white"></i>
+        </div>
+        <div>
+          <div class="text-sm text-slate-400 uppercase tracking-[0.25em] font-bold">Dashboard premium</div>
+          <div class="text-2xl font-black tracking-tight" style="font-family: Fredoka, sans-serif;">Central do grupo</div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <button class="btn-secondary" id="refresh-dashboard"><i data-lucide="refresh-ccw"></i>Atualizar</button>
+        <button class="btn-secondary" id="edit-profile-button"><i data-lucide="user-round-cog"></i>Perfil</button>
+        <button class="btn-primary" id="renew-plan-button"><i data-lucide="gem"></i>Renovar via PIX</button>
+        <button class="btn-danger" id="logout-button"><i data-lucide="log-out"></i>Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell py-8 md:py-10 space-y-8">
+    <section class="hero-panel p-6 md:p-8 lg:p-10 shine">
+      <div class="grid xl:grid-cols-[1.1fr_.9fr] gap-8 items-start">
+        <div>
+          <span class="brand-chip"><i data-lucide="shield-check"></i>Painel protegido</span>
+          <h1 class="section-title mt-5">Olá, <span id="group-name">Grupo</span>.</h1>
+          <p class="section-subtitle mt-4 max-w-2xl">Gerencie os recursos do seu bot, configure automações e mantenha suas mensagens de plataformas salvas diretamente no servidor.</p>
+          <div class="flex flex-wrap gap-3 mt-5">
+            <span class="soft-chip"><i data-lucide="hash"></i><span id="group-id">—</span></span>
+            <span class="status-chip primary" id="group-exp-badge">Plano ativo</span>
+          </div>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <article class="metric-card p-5">
+            <div class="metric-label">Validade</div>
+            <div class="metric-value mt-3 text-[1.35rem] leading-tight" id="group-exp-date">—</div>
+            <div class="metric-note mt-3">Data e hora atualizadas a partir do backend.</div>
+          </article>
+          <article class="metric-card p-5">
+            <div class="metric-label">Contagem regressiva</div>
+            <div class="metric-value mt-3 text-[1.65rem] leading-tight" id="group-countdown">—</div>
+            <div class="metric-note mt-3">Tempo restante do acesso atual.</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-extrabold">Recursos do grupo</h2>
+          <p class="section-subtitle mt-2">Ative ou desative os módulos principais do bot.</p>
+        </div>
+      </div>
+      <div id="feature-grid" class="grid md:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+    </section>
+
+    <section class="grid xl:grid-cols-[1fr_.95fr] gap-6 items-start">
+      <article class="glass-panel p-6 space-y-5">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-extrabold">Plataformas / indicações</h2>
+            <p class="section-subtitle mt-2">Esse texto é salvo em <span class="kbd">src\\plataformas\\plataformas-SEU_ID.json</span>.</p>
+          </div>
+          <div class="card-icon"><i data-lucide="scroll-text"></i></div>
+        </div>
+        <div class="textarea-shell min-h-[320px]">
+          <textarea id="platform-message" rows="13" placeholder="Cole ou escreva a mensagem completa das plataformas aqui..."></textarea>
+        </div>
+        <div class="flex flex-col md:flex-row gap-3">
+          <button class="btn-primary flex-1" id="save-platform-button"><i data-lucide="save"></i>Salvar mensagem</button>
+          <button class="btn-secondary" id="copy-platform-button"><i data-lucide="copy"></i>Copiar texto</button>
+        </div>
+      </article>
+
+      <article class="glass-panel p-6 space-y-5">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-extrabold">Anti mídia</h2>
+            <p class="section-subtitle mt-2">Controle fino de conteúdo por tipo.</p>
+          </div>
+          <div class="card-icon"><i data-lucide="shield-plus"></i></div>
+        </div>
+        <div id="antimedia-grid" class="grid gap-4"></div>
+      </article>
+    </section>
+
+    <section class="space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-extrabold">Auto mensagens</h2>
+          <p class="section-subtitle mt-2">Mensagens recorrentes com texto, mídia, menção e fixação.</p>
+        </div>
+        <button class="btn-primary" id="new-automsg-button"><i data-lucide="plus"></i>Nova automensagem</button>
+      </div>
+      <div id="auto-message-list" class="space-y-4"></div>
+    </section>
+  </main>
+
+  <a href="https://wa.me/5585992374198" target="_blank" class="floating-help btn-success"><i data-lucide="message-circle-more"></i>Suporte</a>
+
+  <script src="/assets/js/common.js?v=20260308b"></script>
+  <script src="/assets/js/dashboard.js?v=20260308b"></script>
+</body>
+</html>
